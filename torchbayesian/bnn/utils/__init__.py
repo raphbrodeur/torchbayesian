@@ -1,0 +1,1 @@
+from torchbayesian.bnn.utils.reparametrize import register_reparametrization
