@@ -7,7 +7,7 @@
 
     @Description:       This file contains the register_reparametrization() function which is used to replace a Torch
                         parameter or buffer by a variational posterior from which the parameter or buffer is sampled.
-                        Wraps and modifies code from PyTorch's nn.utils.parametrize module.
+                        Adapted from PyTorch's nn.utils.parametrize module.
 """
 
 from copy import deepcopy

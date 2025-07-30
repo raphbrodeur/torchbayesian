@@ -1,0 +1,1 @@
+from torchbayesian.bnn.bayesian_module import BayesianModule
