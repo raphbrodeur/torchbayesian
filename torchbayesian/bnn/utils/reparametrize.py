@@ -3,33 +3,37 @@
     @Author:            Raphael Brodeur, PyTorch
 
     @Creation Date:     07/2025
-    @Last modification: 07/2025
+    @Last modification: 08/2025
 
     @Description:       This file contains the register_reparametrization() function which is used to replace a Torch
                         parameter or buffer by a variational posterior from which the parameter or buffer is sampled.
-                        Adapted from PyTorch's nn.utils.parametrize module.
+                        Adapted from PyTorch's nn.utils.parametrize module in order to remove the original parameter
+                        from the registered parameters and the state dict.
 """
 
 from copy import deepcopy
 from typing import (
     Dict,
     Optional,
-    Tuple,
-    Union
+    Tuple
 )
 
 import torch
-import torch.nn as nn
+from torch import Tensor
+from torch.nn import (
+    Module,
+    ModuleDict,
+    Parameter
+)
 
 
-# Are associated code segments dead code ? Kept in case if Torch internals interact with this.
 _cache_enabled = 0
-_cache: Dict[Tuple[int, str], Optional[torch.Tensor]] = {}
+_cache: Dict[Tuple[int, str], Optional[Tensor]] = {}
 
 
-class Reparametrization(nn.Module):
+class Reparametrization(Module):
     """
-    This class wraps the parametrization and handles safe checks for the replacement by the variational posterior and
+    This class wraps the parametrization and handles safety checks for the replacement by the variational posterior and
     its forward call.
 
     It is the type of module.reparametrizations[tensor_name] when module[tensor_name] has been reparametrized with
@@ -42,27 +46,64 @@ class Reparametrization(nn.Module):
 
     def __init__(
             self,
-            parametrization: nn.Module,
-            original: Union[nn.Parameter, torch.Tensor]
+            parametrization: Module,
+            original: Parameter | Tensor,
+            unsafe: bool = False
     ) -> None:
         """
-        Initializes class and check if parametrization function fits with original tensor.
+        Wraps a reparametrization and checks if the parametrization function fits with original tensor.
 
         Parameters
         ----------
-        parametrization : nn.Module
-            The reparametrization function; the variational posterior.
-        original : Union[nn.Parameter, torch.Tensor]
+        parametrization : Module
+            The parametrization function; the variational posterior in the context of Bayes-by-backprop.
+        original : Parameter | Tensor
             The tensor that is being reparametrized.
+        unsafe : bool
+            Whether to bypass correctness checks. Defaults to False.
+
+        Raises
+        ------
+        TypeError
+            If unsafe is set to False and the parametrization's forward call does not return a Tensor.
+        TypeError
+            If unsafe is set to False and the parametrization's forward call does not return a Tensor with the same
+            dtype as the original tensor.
+        ValueError
+            If unsafe is set to False and the parametrization's forward call does not return a Tensor with the same
+            shape as the original tensor.
         """
         super().__init__()
 
-        # TODO Check if safe; do original and parametrization() fit dtype, shape etc.
-        ...
+        # Correctness checks
+        if not unsafe:
+            new = parametrization()     # Get output tensor from reparametrization
 
-        self.variational_posterior: nn.Module = parametrization
+            # Check if parametrization's forward call returns a Tensor
+            if not isinstance(new, Tensor):
+                raise TypeError(
+                    f"A reparametrization must return a tensor. Got {type(new).__name__}."
+                )
 
-    def forward(self) -> torch.Tensor:
+            # Check if dtypes match
+            if new.dtype != original.dtype:
+                raise TypeError(
+                    "Reparametrization may not change the dtype of the tensor, unless the unsafe flag is enabled.\n"
+                    f"Original tensor has dtype: {original.dtype}\n"
+                    f"Reparametrization returns dtype: {new.dtype}"
+                )
+
+            # Check if shapes match
+            if new.shape != original.shape:
+                raise ValueError(
+                    "Reparametrization may not change the shape of the tensor, unless the `unsafe` flag is enabled.\n"
+                    f"Original tensor has shape: {original.shape}\n"
+                    f"Reparametrization returns shape: {new.shape}"
+                )
+
+        self.variational_posterior: Module = parametrization
+
+    def forward(self) -> Tensor:
         """
         Wraps the parametrization's forward call. Checks for scripting.
         """
@@ -75,12 +116,12 @@ class Reparametrization(nn.Module):
 
 
 def register_reparametrization(
-    module: nn.Module,
+    module: Module,
     tensor_name: str,
-    parametrization: nn.Module
-) -> nn.Module:
+    parametrization: Module
+) -> Module:
     """
-    Registers a reparametrization to a tensor in a module.
+    Registers a reparametrization to a tensor (parameter or buffer) in a module.
 
     Assume that tensor_name="weight" for simplicity. When accessing module.weight, the module will return the
     parametrized version parametrization(module.weight). If the original tensor requires a gradient, the backward pass
@@ -89,9 +130,14 @@ def register_reparametrization(
 
     Examples
     --------
-    TODO
+        mod = nn.Linear(2, 4)
+        # This module has parameters "mod.bias" and "mod.weight"
+
+        register_reparametrization(mod, "weight", bnn.GaussianPosterior)
+        # The module "mod" now has parameters "mod.bias", "mod.reparametrizations.weight.GaussianPosterior.mu"
+        # and "mod.reparametrizations.weight.GaussianPosterior.rho"
     """
-    parametrization.train(module.training)
+    parametrization.train(module.training)  # Put parametrization in same training mode as module
 
     # Set the parametrization mechanism
     if tensor_name in module._buffers or tensor_name in module._parameters:
@@ -111,13 +157,13 @@ def register_reparametrization(
             _inject_new_class(module)
 
             # Inject a ModuleDict into the instance under module.reparametrizations
-            module.reparametrizations = nn.ModuleDict()
+            module.reparametrizations = ModuleDict()
 
         # Add a property into the class
         _inject_property(module, tensor_name)
 
-        # Add a ParametrizationList
-        assert isinstance(module.reparametrizations, nn.ModuleDict)  # Make mypy happy
+        # Add a Reparametrization
+        assert isinstance(module.reparametrizations, ModuleDict)  # Make mypy happy
         module.reparametrizations[tensor_name] = reparametrization
 
     else:
@@ -129,7 +175,7 @@ def register_reparametrization(
     return module
 
 
-def is_reparametrized(module: nn.Module, tensor_name: Optional[str] = None) -> bool:
+def is_reparametrized(module: Module, tensor_name: Optional[str] = None) -> bool:
     """
     Whether the module has a reparametrization.
 
@@ -138,7 +184,7 @@ def is_reparametrized(module: nn.Module, tensor_name: Optional[str] = None) -> b
 
     Parameters
     ----------
-    module : nn.Module
+    module : Module
         The module to check for.
     tensor_name : Optional[str]
         The name of the parameter or buffer to check for within the module. Optional. Defaults to None.
@@ -150,7 +196,7 @@ def is_reparametrized(module: nn.Module, tensor_name: Optional[str] = None) -> b
     """
     reparametrizations = getattr(module, "reparametrizations", None)
 
-    if reparametrizations is None or not isinstance(reparametrizations, nn.ModuleDict):
+    if reparametrizations is None or not isinstance(reparametrizations, ModuleDict):
         return False
 
     if tensor_name is None:
@@ -161,7 +207,7 @@ def is_reparametrized(module: nn.Module, tensor_name: Optional[str] = None) -> b
         return tensor_name in reparametrizations
 
 
-def _inject_new_class(module: nn.Module) -> None:
+def _inject_new_class(module: Module) -> None:
     """
     Sets up a module to be reparametrized.
 
@@ -170,7 +216,7 @@ def _inject_new_class(module: nn.Module) -> None:
 
     Parameters
     ----------
-    module : nn.Module
+    module : Module
         The module to prepare for reparametrization.
     """
     cls = module.__class__
@@ -220,7 +266,7 @@ def _inject_new_class(module: nn.Module) -> None:
     module.__class__ = param_cls
 
 
-def _inject_property(module: nn.Module, tensor_name: str) -> None:
+def _inject_property(module: Module, tensor_name: str) -> None:
     """
     Injects a property into module[tensor_name].
 
@@ -232,7 +278,7 @@ def _inject_property(module: nn.Module, tensor_name: str) -> None:
 
     Parameters
     ----------
-    module : nn.Module
+    module : Module
         The module into which a property is injected.
     tensor_name : str
         The name of the property to create.
@@ -242,7 +288,7 @@ def _inject_property(module: nn.Module, tensor_name: str) -> None:
     assert not hasattr(module, tensor_name)
 
     @torch.jit.unused
-    def get_cached_reparametrization(reparametrization) -> torch.Tensor:
+    def get_cached_reparametrization(reparametrization) -> Tensor:
         global _cache
         key = (id(module), tensor_name)
         tensor = _cache.get(key)
@@ -251,7 +297,7 @@ def _inject_property(module: nn.Module, tensor_name: str) -> None:
             _cache[key] = tensor
         return tensor
 
-    def get_parametrized(self) -> torch.Tensor:
+    def get_parametrized(self) -> Tensor:
         if torch.jit.is_scripting():
             raise RuntimeError("Parametrization is not working with scripting.")
 
@@ -276,7 +322,7 @@ def _inject_property(module: nn.Module, tensor_name: str) -> None:
             # If caching is not active, this function just evaluates the parametrization
             return reparametrization()
 
-    def set_original(self, value: torch.Tensor) -> None:
+    def set_original(self, value: Tensor) -> None:
         if torch.jit.is_scripting():
             raise RuntimeError("Parametrization is not working with scripting.")
 
