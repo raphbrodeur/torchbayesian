@@ -100,6 +100,7 @@ class GaussianPrior(Prior):
         else:
             raise TypeError(f"Argument 'sigma' must be Optional[float | Tensor], {type(sigma)} was provided.")
 
+    @property
     def distribution(self) -> Distribution:
         """
         Returns a torch.distributions.Normal distribution.

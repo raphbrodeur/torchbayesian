@@ -68,10 +68,9 @@ class BayesianModule(Module):
         super().__init__()
 
         if variational_posterior is None:
-            variational_posterior = GaussianPosterior   # TODO use factory logic
-        # TODO should prior be accessed through the posterior ? or is it an attribute of the model ?
-        # if prior is None:
-        #     prior = GaussianPrior                       # TODO use factory logic
+            variational_posterior = GaussianPosterior       # TODO use factory logic
+        if prior is None:
+            self._prior = GaussianPrior                       # TODO use factory logic
 
         # Replace every parameter in the model by an instance of the variational posterior
         for name, param in list(module.named_parameters()):
@@ -166,6 +165,8 @@ class BayesianModule(Module):
         # Else, use MC approximation
         ...
 
+        return kl
+
     def kl_divergence(self, num_samples: Optional[int] = None) -> Tensor:
         """
         Gets the KL divergence KL(posterior || prior) of all parameters in the BayesianModule.
@@ -188,7 +189,7 @@ class BayesianModule(Module):
         for name, module in self.named_modules():
             if isinstance(module, VariationalPosterior):    # Compute KL divergence for BNN modules
                 posterior_dist = module.distribution
-                prior_dist = ...
+                prior_dist = self._prior(shape=posterior_dist.batch_shape).distribution
 
                 # Compute KL divergence
                 kl = self._compute_kl_divergence(
