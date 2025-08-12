@@ -13,7 +13,9 @@ from typing import Optional
 
 import torch
 from torch import Tensor
+from torch.distributions import Distribution, Normal
 from torch.nn import Parameter
+import torch.nn.functional as F
 from torch.types import _dtype, _size
 
 from torchbayesian.bnn.variational_posteriors.base import VariationalPosterior
@@ -88,6 +90,30 @@ class GaussianPosterior(VariationalPosterior):
         torch.nn.init.ones_(self.mu)
         torch.nn.init.ones_(self.rho)
 
+    @property
+    def sigma(self) -> Tensor:
+        """
+        Returns the sigma parameter of the gaussian distribution (which is reparametrized with rho).
+
+        Returns
+        -------
+        sigma : Tensor
+            The sigma parameter of the gaussian distribution
+        """
+        return F.softplus(self.rho)
+
+    @property
+    def distribution(self) -> Distribution:
+        """
+        Returns torch.distributions.Normal for KL divergence computation.
+
+        Returns
+        -------
+        distribution : Distribution
+            A torch.distributions.Normal distribution.
+        """
+        return Normal(self.mu, self.sigma)
+
     def sample_parameters(self) -> Tensor:
         """
         Samples parameter values from the variational posterior distribution.
@@ -97,7 +123,7 @@ class GaussianPosterior(VariationalPosterior):
         param : Tensor
             A value of the parameter, sampled from the variational posterior.
         """
-        eps = torch.randn_like(self.rho)
-        param = self.mu + torch.log1p(torch.exp(self.rho)) * eps    # Reparametrization trick
+        eps = torch.randn_like(self.rho)    # eps ~ N(0, 1)
+        param = self.mu + self.sigma * eps  # Reparametrization trick
 
         return param

@@ -12,6 +12,7 @@
 from abc import ABC, abstractmethod
 
 from torch import Tensor
+from torch.distributions import Distribution
 from torch.nn import Module
 
 
@@ -34,6 +35,20 @@ class VariationalPosterior(Module, ABC):
     def reset_parameters(self) -> None:
         """
         Initializes the variational parameters.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def distribution(self) -> Distribution:
+        """
+        A torch.Distribution corresponding to the variational posterior. This is used for KL computation aligned
+        with torch's framework.
+
+        Returns
+        -------
+        distribution : Distribution
+            A torch.Distribution.
         """
         raise NotImplementedError
 
