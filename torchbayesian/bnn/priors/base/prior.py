@@ -14,6 +14,9 @@ from abc import ABC, abstractmethod
 from torch.distributions import Distribution
 
 
+__all__ = ["Prior"]
+
+
 class Prior(ABC):
     """
     This class serves as a base class for all priors used for Bayes-by-backprop variational inference.

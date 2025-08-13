@@ -16,6 +16,9 @@ from torch.distributions import Distribution
 from torch.nn import Module
 
 
+__all__ = ["VariationalPosterior"]
+
+
 class VariationalPosterior(Module, ABC):
     """
     This class serves as a base class for all variational posteriors used for Bayes-by-backprop variational inference.

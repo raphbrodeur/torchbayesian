@@ -27,6 +27,9 @@ from torch.nn import (
 )
 
 
+__all__ = ["register_reparametrization"]
+
+
 _cache_enabled = 0
 _cache: Dict[Tuple[int, str], Optional[Tensor]] = {}
 

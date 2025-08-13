@@ -21,6 +21,9 @@ from torch.types import _dtype, _size
 from torchbayesian.bnn.variational_posteriors.base import VariationalPosterior
 
 
+__all__ = ["GaussianPosterior", "NormalPosterior"]
+
+
 class GaussianPosterior(VariationalPosterior):
     """
     This class is a diagonal gaussian variational posterior that produces samples for the parameters via the
@@ -127,3 +130,6 @@ class GaussianPosterior(VariationalPosterior):
         param = self.mu + self.sigma * eps  # Reparametrization trick
 
         return param
+
+
+NormalPosterior = GaussianPosterior

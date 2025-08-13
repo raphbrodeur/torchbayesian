@@ -12,4 +12,4 @@
 
 
 def enable_dropout():
-    pass
+    raise NotImplementedError

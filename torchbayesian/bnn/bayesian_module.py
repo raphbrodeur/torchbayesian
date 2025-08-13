@@ -24,6 +24,9 @@ from torchbayesian.bnn.utils import register_reparametrization
 from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
 
 
+__all__ = ["BayesianModule"]
+
+
 class BayesianModule(Module):
     """
     This class is a Torch nn.Module container used to reparametrize the parameters of any torch model or module with
