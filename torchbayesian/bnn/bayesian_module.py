@@ -9,7 +9,12 @@
                         reparametrize the parameters of any torch model or module with some variational posterior.
 """
 
-from typing import Optional
+from typing import (
+    Dict,
+    Optional,
+    Tuple,
+    Type
+)
 import warnings
 
 import torch
@@ -46,8 +51,8 @@ class BayesianModule(Module):
     def __init__(
             self,
             module: Module,
-            variational_posterior: Optional[VariationalPosterior] = None,
-            prior: Optional[Prior] = None,
+            variational_posterior: Optional[Type[VariationalPosterior] | str | Tuple[str, Dict]] = None,
+            prior: Optional[Type[Prior] | str | Tuple[str, Dict]] = None,
             debug: bool = False
     ) -> None:
         """
@@ -59,9 +64,9 @@ class BayesianModule(Module):
         ----------
         module: Module
             The module to make bayesian.
-        variational_posterior : Optional[VariationalPosterior]
+        variational_posterior : TODO
             The variational posterior distribution for the parameters. Defaults to GaussianPosterior.
-        prior : Optional[Prior]
+        prior : TODO
             The distribution for the parameters. Defaults to GaussianPrior.
         debug : bool
             Whether to print debug messages. Defaults to False.
@@ -76,7 +81,7 @@ class BayesianModule(Module):
         if variational_posterior is None:
             variational_posterior = GaussianPosterior       # TODO use factory logic
         if prior is None:
-            self._prior = GaussianPrior                       # TODO use factory logic
+            self._prior = GaussianPrior                     # TODO use factory logic
 
         # Replace every parameter in the model by an instance of the variational posterior
         for name, param in list(module.named_parameters()):
