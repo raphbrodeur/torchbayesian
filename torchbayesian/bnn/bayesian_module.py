@@ -10,10 +10,13 @@
 """
 
 from typing import Optional
+import warnings
 
+import torch
 from torch import Tensor
 import torch.distributions as D
 from torch.distributions import Distribution
+from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
 
 from torchbayesian.bnn.priors import GaussianPrior, Prior
@@ -33,7 +36,7 @@ class BayesianModule(Module):
     Notes
     -----
     By default, a gaussian variational posterior distribution and a gaussian prior distribution are used. This allows
-    to evaluate KL divergence between the two in closed form and is somewhat of a standard for BBB variational
+    to evaluate KL divergence between the two in analytical form and is somewhat of a standard for BBB variational
     inference, even though the original paper proposes a scale mixture of gaussians as prior.
     """
 
@@ -83,7 +86,7 @@ class BayesianModule(Module):
             # Register reparametrization to parameter
             if debug:
                 print(
-                    f"Registering to module {module.get_submodule(owner_module_name)}'s {param_name}..."
+                    f"Registering to module {module.get_submodule(owner_module_name)}'s parameter {param_name}..."
                 )
             register_reparametrization(
                 module=module.get_submodule(owner_module_name),
@@ -109,34 +112,52 @@ class BayesianModule(Module):
         """
         return self.module(input)
 
-    def _MC_approx_kl_divergence(self, num_samples: int) -> Tensor:
+    @staticmethod
+    def _MC_approx_kl_divergence(
+            posterior: Distribution,
+            prior: Distribution,
+            num_samples: int
+    ) -> Tensor:
         """
         Computes the KL divergence KL(posterior || prior) of the BayesianModule through a Monte Carlo approximation.
+        Core idea is that KL(q || p) = Expectation[log q(w) - log p(w)] over w ~ q(w).
 
         Parameters
         ----------
+        posterior : Distribution
+            The variational posterior distribution.
+        prior : Distribution
+            The prior distribution.
         num_samples : int
-            The number of samples for the MC approximation of the KL divergence. A common value is in the range of TODO
+            The number of samples for the MC approximation of the KL divergence.
 
         Returns
         -------
-        kl_div : Tensor
+        approx_kl_div : Tensor
             The MC-approximate KL divergence KL(posterior || prior) of the BayesianModule.
         """
-        pass
+        # Sample w ~ q(w)
+        posterior_samples = posterior.rsample((num_samples, ))
+
+        # MC approx of E_{w~q(w)}[log q(w) - log p(w)]
+        approx_kl_div = (
+            posterior.log_prob(posterior_samples) - prior.log_prob(posterior_samples)
+        ).mean(0)
+
+        return approx_kl_div
 
     def _compute_kl_divergence(
             self,
             variational_posterior: Distribution,
             prior: Distribution,
-            num_samples: Optional[int] = None
+            approx_num_samples: Optional[int] = None
     ) -> Tensor:
         """
-        Gets the KL divergence KL(posterior || prior) of a parameter from the BayesianModule.
+        Gets the elementwise KL divergence KL(posterior || prior) of a parameter from the BayesianModule.
 
         Notes
         -----
-        If closed-form evaluation is not defined, defaults to MC approximation of the KL divergence by sampling from the
+        If analytical solution is not defined, defaults to MC approximation of the KL divergence by sampling from the
         posterior and prior.
 
         Parameters
@@ -145,9 +166,9 @@ class BayesianModule(Module):
             The variational posterior distribution.
         prior : Distribution
             The prior distribution.
-        num_samples : Optional[int]
-            The number of samples for the MC approximation of the KL divergence. Defaults to None. A common value is in
-            the range of TODO...
+        approx_num_samples : Optional[int]
+            The number of samples for the MC approximation of the KL divergence. Only useful if no analytical solution
+            of the KL divergence between the posterior and prior distributions is implemented. Defaults to None.
 
         Returns
         -------
@@ -157,45 +178,101 @@ class BayesianModule(Module):
         Raises
         ------
         ValueError
-            TODO if no num samples is specified but its needed
+            If no analytical solution is implemented and 'approx_num_samples' is None.
+
+        Warnings
+        --------
+        UserWarning
+            If MC approximation of the KL divergence is used but there is an analytical solution available.
         """
-        # If analytical solution exists
-        kl = D.kl_divergence(variational_posterior, prior)
+        if _dispatch_kl(type(variational_posterior), type(prior)) is not NotImplemented:
+            # Analytical solution is implemented;
+            # Warn user if he is still using MC approximation of the KL divergence
+            if approx_num_samples is not None:
+                warnings.warn(
+                    f"You are using a Monte-Carlo approximation of the KL div, but an analytical solution is "
+                    f"implemented for distributions {type(variational_posterior)} and {type(prior)}. It is recommended "
+                    f"that you set 'approx_num_samples' to None and use the default analytical solution instead.",
+                    UserWarning
+                )
+        elif approx_num_samples is None:
+            # Analytical solution is not implemented;
+            # Check if number of samples is specified for MC approximation
+            raise ValueError(
+                f"No analytical solution implemented for distributions {type(variational_posterior)} and {type(prior)}."
+                f" You can use a Monte-Carlo approximation instead by specifying the 'approx_num_samples' argument."
+            )
 
-        # Else, use MC approximation
-        ...
+        if approx_num_samples is None:
+            kl_div = D.kl_divergence(variational_posterior, prior)
+        else:
+            kl_div = self._MC_approx_kl_divergence(variational_posterior, prior, approx_num_samples)
 
-        return kl
+        return kl_div
 
-    def kl_divergence(self, num_samples: Optional[int] = None) -> Tensor:
+    def kl_divergence(
+            self,
+            reduction: str = "sum",
+            approx_num_samples: Optional[int] = None
+    ) -> Tensor:
         """
         Gets the KL divergence KL(posterior || prior) of all parameters in the BayesianModule.
 
         Notes
         -----
-        If closed-form evaluation is not defined, defaults to MC approximation of the KL divergence.
+        If analytical solution is not defined between the two distributions, MC approximation of the KL divergence can
+        be used.
 
         Parameters
         ----------
-        num_samples : Optional[int]
-            The number of samples for the MC approximation of the KL divergence. Defaults to None. A common value is in
-            the range of TODO...
+        reduction : str
+            The reduction to apply to the full elementwise parameters KL divergence. Either "sum" (sum of all elements
+            making up all the parameters) or "mean" (mean of all elements making up all the parameters). In theory,
+            true ELBO uses the sum of the elementwise KL divergences, but in practice this can scale badly with model
+            size and mini-batching. Therefore, in practice, it is not uncommon to scale the KL divergence or to use a
+            mean reduction of the KL divergence . Defaults to "sum".
+        approx_num_samples : Optional[int]
+            The number of samples for the MC approximation of the KL divergence. Only useful if no analytical solution
+            of the KL divergence between the posterior and prior distributions is implemented. Defaults to None.
 
         Returns
         -------
         kl_div : Tensor
             The KL divergence KL(posterior || prior) of the BayesianModule.
+
+        Raises
+        ------
+        ValueError
+            If reduction type is invalid.
         """
+        reduction = reduction.lower()
+
+        if reduction not in {"mean", "sum"}:
+            raise ValueError(f"Invalid reduction type: '{reduction}'. Expected 'mean' or 'sum'.")
+
+        kl_div = torch.zeros(())                                # Accumulator of the KL divergences
+        num_elements = 0 if reduction == "mean" else None       # Elements count for mean reduction
         for name, module in self.named_modules():
-            if isinstance(module, VariationalPosterior):    # Compute KL divergence for BNN modules
+            # Compute KL divergence only for BNN modules
+            if isinstance(module, VariationalPosterior):
+                # Get posterior and prior distributions
                 posterior_dist = module.distribution
                 prior_dist = self._prior(shape=posterior_dist.batch_shape).distribution
 
                 # Compute KL divergence
-                kl = self._compute_kl_divergence(
+                kl_div_elementwise = self._compute_kl_divergence(
                     variational_posterior=posterior_dist,
                     prior=prior_dist,
-                    num_samples=num_samples
+                    approx_num_samples=approx_num_samples
                 )
 
-                ...
+                # Accumulation
+                kl_div += kl_div_elementwise.sum()
+                if reduction == "mean":
+                    num_elements += kl_div_elementwise.numel()
+
+        # Mean reduction
+        if reduction == "mean":
+            kl_div = kl_div / num_elements
+
+        return kl_div
