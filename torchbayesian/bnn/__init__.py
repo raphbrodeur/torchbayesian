@@ -1,4 +1,4 @@
-from torchbayesian.bnn.bayesian_module import BayesianModule
+from torchbayesian.bnn.modules import BayesianModule
 from torchbayesian.bnn.priors import (
     GaussianPrior,
     NormalPrior,

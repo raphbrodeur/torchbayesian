@@ -22,6 +22,7 @@ from torchbayesian.bnn.priors.base import Prior
 
 __all__ = ["GaussianPrior", "NormalPrior"]
 
+
 class GaussianPrior(Prior):
     """
     This class is a diagonal gaussian prior distribution. It is a standard prior distribution for the parameters in

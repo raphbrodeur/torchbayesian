@@ -1,5 +1,7 @@
 from torchbayesian.bnn.utils.factories import (
     Factory,
+    get_posterior,
+    get_prior,
     PosteriorFactory,
     PriorFactory
 )

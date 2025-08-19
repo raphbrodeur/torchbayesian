@@ -12,8 +12,7 @@
 from typing import (
     Dict,
     Optional,
-    Tuple,
-    Type
+    Tuple
 )
 import warnings
 
@@ -24,9 +23,12 @@ from torch.distributions import Distribution
 from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
 
-from torchbayesian.bnn.priors import GaussianPrior, Prior
-from torchbayesian.bnn.utils import register_reparametrization
-from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
+from torchbayesian.bnn.utils import (
+    get_posterior,
+    get_prior,
+    register_reparametrization
+)
+from torchbayesian.bnn.variational_posteriors import VariationalPosterior
 
 
 __all__ = ["BayesianModule"]
@@ -46,13 +48,17 @@ class BayesianModule(Module):
     By default, a gaussian variational posterior distribution and a gaussian prior distribution are used. This allows
     to evaluate KL divergence between the two in analytical form and is somewhat of a standard for BBB variational
     inference, even though the original paper proposes a scale mixture of gaussians as prior.
+
+    If one wants to use custom variational posteriors and priors, simply register a factory function for the custom
+    posterior or prior to the factories 'PosteriorFactory' or 'PriorFactory', as detailed in the docs of 'Factory' in
+    file 'torchbayesian.bnn.utils.factories'.
     """
 
     def __init__(
             self,
             module: Module,
-            variational_posterior: Optional[Type[VariationalPosterior] | str | Tuple[str, Dict]] = None,
-            prior: Optional[Type[Prior] | str | Tuple[str, Dict]] = None,
+            variational_posterior: Optional[str | Tuple[str, Dict]] = None,
+            prior: Optional[str | Tuple[str, Dict]] = None,
             debug: bool = False
     ) -> None:
         """
@@ -64,10 +70,12 @@ class BayesianModule(Module):
         ----------
         module: Module
             The module to make bayesian.
-        variational_posterior : TODO
-            The variational posterior distribution for the parameters. Defaults to GaussianPosterior.
-        prior : TODO
-            The distribution for the parameters. Defaults to GaussianPrior.
+        variational_posterior : Optional[str | Tuple[str, Dict]]
+            The variational posterior distribution for the parameters. Either the name (str) of the variational
+            posterior or a tuple of its name and keyword arguments. Defaults to GaussianPosterior.
+        prior : Optional[str | Tuple[str, Dict]]
+            The prior distribution for the parameters. Either the name (str) of the prior or a tuple of its name and
+            keyword arguments. Defaults to GaussianPrior with 0 mean and unit standard deviation.
         debug : bool
             Whether to print debug messages. Defaults to False.
 
@@ -79,9 +87,9 @@ class BayesianModule(Module):
         super().__init__()
 
         if variational_posterior is None:
-            variational_posterior = GaussianPosterior       # TODO use factory logic
+            variational_posterior = "NORMAL"                # Defaults to GaussianPosterior
         if prior is None:
-            self._prior = GaussianPrior                     # TODO use factory logic
+            prior = ("NORMAL", {"mu": 0., "sigma": 1.})     # Defaults to GaussianPrior with mu = 0 and sigma = 1
 
         # Replace every parameter in the model by an instance of the variational posterior
         for name, param in list(module.named_parameters()):
@@ -99,10 +107,11 @@ class BayesianModule(Module):
             register_reparametrization(
                 module=module.get_submodule(owner_module_name),
                 tensor_name=param_name,
-                parametrization=variational_posterior(param)
+                parametrization=get_posterior(param=param, posterior=variational_posterior)
             )
 
         self.module = module
+        self._prior = prior
 
     def forward(self, input: Tensor) -> Tensor:
         """
@@ -265,7 +274,7 @@ class BayesianModule(Module):
             if isinstance(module, VariationalPosterior):
                 # Get posterior and prior distributions
                 posterior_dist = module.distribution
-                prior_dist = self._prior(shape=posterior_dist.batch_shape).distribution
+                prior_dist = get_prior(shape=posterior_dist.batch_shape, prior=self._prior).distribution
 
                 # Compute KL divergence
                 kl_div_elementwise = self._compute_kl_divergence(

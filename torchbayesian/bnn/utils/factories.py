@@ -18,10 +18,15 @@ from typing import (
     Type
 )
 
-import torchbayesian.bnn as bnn
+from torch import Tensor
+from torch.nn import Parameter
+from torch.types import _size
+
+from torchbayesian.bnn.priors import GaussianPrior, Prior
+from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
 
 
-__all__ = ["Factory", "PosteriorFactory", "PriorFactory"]
+__all__ = ["Factory", "get_posterior", "get_prior", "PosteriorFactory", "PriorFactory"]
 
 
 class Factory:
@@ -149,13 +154,13 @@ PriorFactory = Factory()
 
 
 @PriorFactory.register_factory_function("gaussian")
-def gaussian_prior_factory() -> Type[bnn.GaussianPrior]:
-    return bnn.GaussianPrior
+def gaussian_prior_factory() -> Type[GaussianPrior]:
+    return GaussianPrior
 
 
 @PriorFactory.register_factory_function("normal")
-def normal_prior_factory() -> Type[bnn.GaussianPrior]:
-    return bnn.GaussianPrior
+def normal_prior_factory() -> Type[GaussianPrior]:
+    return GaussianPrior
 
 
 # Create a 'VariationalPosterior' Factory() and register some factory functions to it
@@ -163,10 +168,69 @@ PosteriorFactory = Factory()
 
 
 @PosteriorFactory.register_factory_function("gaussian")
-def gaussian_posterior_factory() -> Type[bnn.GaussianPosterior]:
-    return bnn.GaussianPosterior
+def gaussian_posterior_factory() -> Type[GaussianPosterior]:
+    return GaussianPosterior
 
 
 @PosteriorFactory.register_factory_function("normal")
-def normal_posterior_factory() -> Type[bnn.GaussianPosterior]:
-    return bnn.GaussianPosterior
+def normal_posterior_factory() -> Type[GaussianPosterior]:
+    return GaussianPosterior
+
+
+# 'Prior' and 'VariationalPosterior' instantiation functions
+
+
+def get_prior(shape: _size, prior: str | Tuple[str, Dict]) -> Prior:
+    """
+    Creates an instance of a 'Prior' subclass. For use in 'bnn.BayesianModule'.
+
+    Parameters
+    ----------
+    shape : _size
+        The shape of the parameter or tensor for which to initialize a prior.
+    prior : str | Tuple[str, Dict]
+        The prior to instantiate. Either the prior's name (str) or a tuple of the name and a
+        dictionary of keyword arguments for instantiation.
+
+    Returns
+    -------
+    prior_instance : Prior
+        The instantiated variational posterior.
+    """
+    if isinstance(prior, str):
+        prior_name = prior
+        prior_kwargs = {}
+    else:
+        prior_name, prior_kwargs = prior
+
+    prior_type = PriorFactory[prior_name]   # Get appropriate prior factory function
+
+    return prior_type(shape=shape, **prior_kwargs)
+
+
+def get_posterior(param: Parameter | Tensor, posterior: str | Tuple[str, Dict]) -> VariationalPosterior:
+    """
+    Creates an instance of a 'VariationalPosterior' subclass. For use in 'bnn.BayesianModule'.
+
+    Parameters
+    ----------
+    param : Parameter | Tensor
+        The parameter or tensor for which to initialize a variational posterior.
+    posterior : str | Tuple[str, Dict]
+        The variational posterior to instantiate. Either the posterior's name (str) or a tuple of the name and a
+        dictionary of keyword arguments for instantiation.
+
+    Returns
+    -------
+    posterior_instance : VariationalPosterior
+        The instantiated variational posterior.
+    """
+    if isinstance(posterior, str):
+        posterior_name = posterior
+        posterior_kwargs = {}
+    else:
+        posterior_name, posterior_kwargs = posterior
+
+    posterior_type = PosteriorFactory[posterior_name]   # Get appropriate posterior factory function
+
+    return posterior_type(param=param, **posterior_kwargs)

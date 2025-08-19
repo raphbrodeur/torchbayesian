@@ -23,6 +23,11 @@ class Prior(ABC):
 
     Base class implemented for consistency in the case of possible future implementation of learnable priors and making
     Prior also a subclass of Module.
+
+    Notes
+    -----
+    Subclasses of 'Prior' used in 'bnn.BayesianModule' must accept 'shape' : Optional[_size] as argument in their
+    constructor ('__init__') method !!
     """
 
     @property

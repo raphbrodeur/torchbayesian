@@ -25,8 +25,8 @@ class VariationalPosterior(Module, ABC):
 
     Notes
     -----
-    Subclasses of VariationalPosterior used in BayesianModule must accept param: Union[nn.Parameter, torch.Tensor] as
-    argument in their constructor __init__ method.
+    Subclasses of 'VariationalPosterior' used in 'bnn.BayesianModule' must accept 'param' : Union[nn.Parameter,
+    torch.Tensor] as argument in their constructor ('__init__') method !!
 
     In the constructor __init__ methods of subclasses of VariationalPosterior:
     (1) Call  super().__init__() then;
