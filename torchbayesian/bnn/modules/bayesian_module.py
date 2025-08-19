@@ -91,6 +91,8 @@ class BayesianModule(Module):
         if prior is None:
             prior = ("NORMAL", {"mu": 0., "sigma": 1.})     # Defaults to GaussianPrior with mu = 0 and sigma = 1
 
+        original_training_flag = module.training    # Register training flag of orginal module
+
         # Replace every parameter in the model by an instance of the variational posterior
         for name, param in list(module.named_parameters()):
             # Get name of parameter and name of the module owning it
@@ -109,6 +111,8 @@ class BayesianModule(Module):
                 tensor_name=param_name,
                 parametrization=get_posterior(param=param, posterior=variational_posterior)
             )
+
+        module.train(original_training_flag)  # Put BNN in same training mode as original module
 
         self.module = module
         self._prior = prior
