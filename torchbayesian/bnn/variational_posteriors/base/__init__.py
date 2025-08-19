@@ -1,0 +1,1 @@
+from torchbayesian.bnn.variational_posteriors.base.variational_posterior import VariationalPosterior
