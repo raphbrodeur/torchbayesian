@@ -86,11 +86,9 @@ class GaussianPosterior(VariationalPosterior):
     def reset_parameters(self) -> None:
         """
         Initializes the variational parameters.
-
-        TODO Normal or Uniform initialization ?
         """
         # TODO dummy initialization for the moment
-        torch.nn.init.ones_(self.mu)
+        torch.nn.init.zeros_(self.mu)
         torch.nn.init.ones_(self.rho)
 
     @property
