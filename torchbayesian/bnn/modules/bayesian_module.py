@@ -272,7 +272,7 @@ class BayesianModule(Module):
             raise ValueError(f"Invalid reduction type: '{reduction}'. Expected 'mean' or 'sum'.")
 
         kl_div = torch.zeros(())                                # Accumulator of the KL divergences
-        num_elements = 0 if reduction == "mean" else None       # Elements count for mean reduction
+        num_elements = 0 if reduction == "mean" else None       # Count elements for mean reduction
         for name, module in self.named_modules():
             # Compute KL divergence only for BNN modules
             if isinstance(module, VariationalPosterior):

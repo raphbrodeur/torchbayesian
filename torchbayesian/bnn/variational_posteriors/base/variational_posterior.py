@@ -45,8 +45,10 @@ class VariationalPosterior(Module, ABC):
     @abstractmethod
     def distribution(self) -> Distribution:
         """
-        A torch.Distribution corresponding to the variational posterior. This is used for KL computation aligned
-        with torch's framework.
+        An element-wise torch.Distribution corresponding to the variational posterior. This is used for KL computation
+        aligned with torch's framework.
+
+        Shape should be the same as the shape of the parameters sampled from the variational posterior.
 
         Returns
         -------
