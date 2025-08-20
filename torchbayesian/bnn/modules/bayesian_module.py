@@ -109,7 +109,7 @@ class BayesianModule(Module):
             register_reparametrization(
                 module=module.get_submodule(owner_module_name),
                 tensor_name=param_name,
-                parametrization=get_posterior(param=param, posterior=variational_posterior)
+                parametrization=get_posterior(param=param, posterior=variational_posterior).to(device=param.device),
             )
 
         module.train(original_training_flag)  # Put BNN in same training mode as original module
