@@ -26,8 +26,8 @@ class Prior(ABC):
 
     Notes
     -----
-    Subclasses of 'Prior' used in 'bnn.BayesianModule' must accept 'shape' : Optional[_size] as argument in their
-    constructor ('__init__') method !!
+    Subclasses of 'Prior' used in 'bnn.BayesianModule' must accept 'shape' : _size, 'dtype' : Optional[_dtype] and
+    'device' : Optional[Device] as argument in their constructor ('__init__') method !!
     """
 
     @property

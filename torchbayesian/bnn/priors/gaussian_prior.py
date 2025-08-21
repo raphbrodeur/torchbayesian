@@ -14,8 +14,11 @@ from typing import Optional
 import torch
 from torch import Tensor
 from torch.distributions import Distribution, Normal
-from torch.nn import Parameter
-from torch.types import _size
+from torch.types import (
+    _dtype,
+    _size,
+    Device
+)
 
 from torchbayesian.bnn.priors.base import Prior
 
@@ -32,50 +35,47 @@ class GaussianPrior(Prior):
 
     def __init__(
             self,
+            shape: Optional[_size] = None,
             mu: Optional[float | Tensor] = None,
             sigma: Optional[float | Tensor] = None,
-            param: Optional[Parameter | Tensor] = None,
-            shape: Optional[_size] = None
+            *,
+            dtype: Optional[_dtype] = None,
+            device: Optional[Device] = None
     ) -> None:
         """
-        Initializes a diagonal gaussian prior distribution. Standard in practice for BBB.
+        Initializes a diagonal gaussian prior distribution. Common prior in practice for BBB.
 
         Parameters
         ----------
+        shape : _size
+            The supposed shape of the parameter for which to initialize a Prior.
         mu : Optional[float | Tensor]
             The mean of the gaussian prior distribution. Either a float that will be assigned to each element of the
-            mean matrix or a Tensor whose shape match the mean matrix. Optional. Defaults to 0.
+            mean matrix or a Tensor whose shape, dtype and device match the mean matrix. Optional. Defaults to 0.
         sigma : Optional[float | Tensor]
             The standard deviation of the gaussian prior distribution. Either a float that will be assigned to each
-            element of the std matrix or a Tensor whose shape match the std matrix. Optional. Defaults to 1.
-        param : Optional[Parameter | Tensor]
-            A parameter or tensor whose shape to use for the mu and sigma tensors. If None, then specified shape is
-            used.
-        shape : Optional[_size]
-            The shape of the mu and sigma tensors. If None, defaults to the shape of the input param.
+            element of the std matrix or a Tensor whose shape, dtype and device match the std matrix. Optional. Defaults
+            to 1.
+        dtype: Optional[_dtype]
+            The supposed dtype of the parameter for which to initialize a Prior. Optional. Defaults to torch's default
+            dtype.
+        device: Optional[Device]
+            The supposed device of the parameter for which to initialize a Prior. Optional. Defaults to torch's default
+            device.
 
         Raises
         ------
         ValueError
-            If 'mu' and/or 'sigma' are None or float, and both 'param' or 'shape' are provided.
-        ValueError
-            If either or both 'mu' and 'sigma' are None or float, and both 'param' or 'shape' are not provided.
-        ValueError
-            If either or both 'mu' and 'sigma' are Tensor, and 'param' and/or 'shape' are specified.
+            If 'mu' and/or 'sigma' are None or float, and 'shape' is not provided.
         TypeError
             If either 'mu' or 'sigma' is not type Optional[float | Tensor].
         """
         super().__init__()
 
-        # If needed, get 'shape' argument
-        if not isinstance(mu, Tensor) or not isinstance(sigma, Tensor):
-            if param is not None:
-                if shape is not None:
-                    raise ValueError("Provide either 'param' or 'shape' argument, not both.")
-                shape = param.size()
-            else:
-                if shape is None:
-                    raise ValueError("Must provide either 'param' or 'shape' argument.")
+        if not isinstance(mu, Tensor) and shape is None:
+            raise ValueError(f"Must provide 'shape' argument or a tensor 'mu' with appropriate shape.")
+        if not isinstance(sigma, Tensor) and shape is None:
+            raise ValueError(f"Must provide 'shape' argument or a tensor 'sigma' with appropriate shape.")
 
         # Defaults to N(0, 1) distribution
         if mu is None:
@@ -85,20 +85,16 @@ class GaussianPrior(Prior):
 
         # Assign attribute 'mu'
         if isinstance(mu, float):
-            self.mu = torch.full(shape, mu)
+            self.mu = torch.full(shape, mu, dtype=dtype, device=device)
         elif isinstance(mu, Tensor):
-            if param is not None or shape is not None:
-                raise ValueError("If 'mu' is a Tensor, then 'param' and 'shape' arguments must not be provided.")
             self.mu = mu
         else:
             raise TypeError(f"Argument 'mu' must be Optional[float | Tensor], {type(mu)} was provided.")
 
         # Assign attribute 'sigma'
         if isinstance(sigma, float):
-            self.sigma = torch.full(shape, sigma)
+            self.sigma = torch.full(shape, sigma, dtype=dtype, device=device)
         elif isinstance(sigma, Tensor):
-            if param is not None or shape is not None:
-                raise ValueError("If 'sigma' is a Tensor, then 'param' and 'shape' arguments must not be provided.")
             self.sigma = sigma
         else:
             raise TypeError(f"Argument 'sigma' must be Optional[float | Tensor], {type(sigma)} was provided.")

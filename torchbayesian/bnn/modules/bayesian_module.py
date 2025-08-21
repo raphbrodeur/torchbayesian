@@ -22,6 +22,7 @@ import torch.distributions as D
 from torch.distributions import Distribution
 from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
+from torch.types import _dtype, Device
 
 from torchbayesian.bnn.utils import (
     get_posterior,
@@ -59,6 +60,9 @@ class BayesianModule(Module):
             module: Module,
             variational_posterior: Optional[str | Tuple[str, Dict]] = None,
             prior: Optional[str | Tuple[str, Dict]] = None,
+            *,
+            dtype: Optional[_dtype] = None,
+            device: Optional[Device] = None,
             debug: bool = False
     ) -> None:
         """
@@ -76,6 +80,16 @@ class BayesianModule(Module):
         prior : Optional[str | Tuple[str, Dict]]
             The prior distribution for the parameters. Either the name (str) of the prior or a tuple of its name and
             keyword arguments. Defaults to GaussianPrior with 0 mean and unit standard deviation.
+        dtype: Optional[_dtype]
+            The dtype on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
+            order to track the device and dtype of the module's parameters through calls to _apply so that the KL
+            accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
+            dtype. Recommended to use BayesianModule(...).to(device, dtype) instead of this argument.
+        device: Optional[Device]
+            The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized
+            in order to track the device and dtype of the module's parameters through calls to _apply so that the KL
+            accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
+            device. Recommended to use BayesianModule(...).to(device, dtype) instead of this argument.
         debug : bool
             Whether to print debug messages. Defaults to False.
 
@@ -109,13 +123,17 @@ class BayesianModule(Module):
             register_reparametrization(
                 module=module.get_submodule(owner_module_name),
                 tensor_name=param_name,
-                parametrization=get_posterior(param=param, posterior=variational_posterior).to(device=param.device),
+                parametrization=get_posterior(
+                    param=param,
+                    posterior=variational_posterior
+                ).to(device=param.device, dtype=param.dtype)
             )
 
         module.train(original_training_flag)  # Put BNN in same training mode as original module
 
         self.module = module
         self._prior = prior
+        self.register_buffer("_kl_meta", torch.empty(0, device=device, dtype=dtype), persistent=False)
 
     def forward(self, input: Tensor) -> Tensor:
         """
@@ -233,6 +251,7 @@ class BayesianModule(Module):
 
     def kl_divergence(
             self,
+            *,
             reduction: str = "sum",
             approx_num_samples: Optional[int] = None
     ) -> Tensor:
@@ -243,6 +262,15 @@ class BayesianModule(Module):
         -----
         If analytical solution is not defined between the two distributions, MC approximation of the KL divergence can
         be used.
+
+        Warning
+        -------
+        KL divergence is computer using an accumulator in order to avoid the overhead with using a list of KL terms, but
+        the accumulator must be on appropriate device which is why BayesianModule tracks a buffer _kl_meta. As such,
+        if BayesianModule is not initialized on same device as the original module, and that no move to appropriate
+        dtype/device is done afterward (e.g. using net.to(...) or net.cuda()), then accumulator's dtype/device might not
+        fit with KL divergence terms coming from the parameters. This is easily fixable by calling .to(...) to move all
+        parameters and buffers of the BayesianModule to the same dtype/device.
 
         Parameters
         ----------
@@ -271,14 +299,19 @@ class BayesianModule(Module):
         if reduction not in {"mean", "sum"}:
             raise ValueError(f"Invalid reduction type: '{reduction}'. Expected 'mean' or 'sum'.")
 
-        kl_div = torch.zeros(())                                # Accumulator of the KL divergences
+        kl_div = torch.zeros((), dtype=self._kl_meta.dtype, device=self._kl_meta.device)    # Accumulator
         num_elements = 0 if reduction == "mean" else None       # Count elements for mean reduction
         for name, module in self.named_modules():
             # Compute KL divergence only for BNN modules
             if isinstance(module, VariationalPosterior):
                 # Get posterior and prior distributions
                 posterior_dist = module.distribution
-                prior_dist = get_prior(shape=posterior_dist.batch_shape, prior=self._prior).distribution
+                prior_dist = get_prior(
+                    shape=module.shape,
+                    prior=self._prior,
+                    dtype=module.dtype,
+                    device=module.device,
+                ).distribution
 
                 # Compute KL divergence
                 kl_div_elementwise = self._compute_kl_divergence(
