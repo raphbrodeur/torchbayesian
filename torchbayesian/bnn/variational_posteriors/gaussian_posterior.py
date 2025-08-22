@@ -73,8 +73,8 @@ class GaussianPosterior(VariationalPosterior):
         TODO init method factory
         """
         # TODO dummy initialization for the moment
-        torch.nn.init.zeros_(self.mu)
-        torch.nn.init.ones_(self.rho)
+        torch.nn.init.normal_(self.mu, mean=0.0, std=0.1)
+        torch.nn.init.constant_(self.rho, -3.0)             # Makes sigma around 0.02
 
     @property
     def sigma(self) -> Tensor:
