@@ -15,9 +15,9 @@ import torch
 from torch import Tensor
 from torch.distributions import Distribution, Normal
 from torch.types import (
+    Device,
     _dtype,
-    _size,
-    Device
+    _size
 )
 
 from torchbayesian.bnn.priors.base import Prior
@@ -102,7 +102,7 @@ class GaussianPrior(Prior):
     @property
     def distribution(self) -> Distribution:
         """
-        Returns a torch.distributions.Normal distribution.
+        Returns a 'torch.distributions.Normal' distribution.
 
         Returns
         -------

@@ -22,9 +22,9 @@ from typing import (
 from torch import Tensor
 from torch.nn import Parameter
 from torch.types import (
+    Device,
     _dtype,
-    _size,
-    Device
+    _size
 )
 
 from torchbayesian.bnn.priors import GaussianPrior, Prior
@@ -168,23 +168,7 @@ def normal_prior_factory() -> Type[GaussianPrior]:
     return GaussianPrior
 
 
-# Create a 'VariationalPosterior' Factory() and register some factory functions to it
-PosteriorFactory = Factory()
-
-
-@PosteriorFactory.register_factory_function("gaussian")
-def gaussian_posterior_factory() -> Type[GaussianPosterior]:
-    return GaussianPosterior
-
-
-@PosteriorFactory.register_factory_function("normal")
-def normal_posterior_factory() -> Type[GaussianPosterior]:
-    return GaussianPosterior
-
-
-# 'Prior' and 'VariationalPosterior' instantiation functions
-
-
+# Create a 'Prior' instantiation function
 def get_prior(
         shape: _size,
         prior: str | Tuple[str, Dict],
@@ -231,6 +215,21 @@ def get_prior(
     return prior_instance
 
 
+# Create a 'VariationalPosterior' Factory() and register some factory functions to it
+PosteriorFactory = Factory()
+
+
+@PosteriorFactory.register_factory_function("gaussian")
+def gaussian_posterior_factory() -> Type[GaussianPosterior]:
+    return GaussianPosterior
+
+
+@PosteriorFactory.register_factory_function("normal")
+def normal_posterior_factory() -> Type[GaussianPosterior]:
+    return GaussianPosterior
+
+
+# Create a 'VariationalPosterior' instantiation function
 def get_posterior(param: Parameter | Tensor, posterior: str | Tuple[str, Dict]) -> VariationalPosterior:
     """
     Creates an instance of a 'VariationalPosterior' subclass to replace a given tensor. For use in 'bnn.BayesianModule'.

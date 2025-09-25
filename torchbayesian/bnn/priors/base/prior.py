@@ -34,12 +34,12 @@ class Prior(ABC):
     @abstractmethod
     def distribution(self) -> Distribution:
         """
-        A torch.distributions.Distribution corresponding to the prior. This is used for KL computation aligned with
+        A 'torch.distributions.Distribution' corresponding to the prior. This is used for KL computation aligned with
         torch's framework.
 
         Returns
         -------
         distribution : Distribution
-            A torch.Distribution.
+            A 'torch.distributions.Distribution' corresponding to the prior.
         """
         raise NotImplementedError

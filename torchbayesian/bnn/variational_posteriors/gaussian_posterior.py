@@ -5,7 +5,7 @@
     @Creation Date:     07/2025
     @Last modification: 08/2025
 
-    @Description:       This file contains the GaussianPosterior class, a diagonal gaussian variational posterior for
+    @Description:       This file contains the 'GaussianPosterior' class, a diagonal gaussian variational posterior for
                         Bayes-by-backprop. It is the standard variational posterior for BBB variational inference.
 """
 
@@ -17,9 +17,9 @@ from torch.distributions import Distribution, Normal
 from torch.nn import Parameter
 import torch.nn.functional as F
 from torch.types import (
+    Device,
     _dtype,
-    _size,
-    Device
+    _size
 )
 
 from torchbayesian.bnn.variational_posteriors.base import VariationalPosterior

@@ -255,7 +255,7 @@ def _inject_new_class(module: Module) -> None:
 
     dct = {"__getstate__": getstate}
 
-    # We don't allow serialization of parametrized modules but should still allow deepcopying.
+    # We don't allow serialization of parametrized modules but should still allow deep-copying.
     # Default 'deepcopy' function invokes __deepcopy__ method instead of __getstate__ when it exists.
     if not hasattr(cls, "__deepcopy__"):
         dct["__deepcopy__"] = default_deepcopy  # type: ignore[assignment]

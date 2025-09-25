@@ -5,7 +5,7 @@
     @Creation Date:     07/2025
     @Last modification: 08/2025
 
-    @Description:       This file contains the BayesianModule class which is a Torch nn.Module container used to
+    @Description:       This file contains the 'BayesianModule' class which is a Torch 'nn.Module' container used to
                         reparametrize the parameters of any torch model or module with some variational posterior.
 """
 
@@ -22,7 +22,7 @@ import torch.distributions as D
 from torch.distributions import Distribution
 from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
-from torch.types import _dtype, Device
+from torch.types import Device, _dtype
 
 from torchbayesian.bnn.utils import (
     get_posterior,
@@ -37,12 +37,12 @@ __all__ = ["BayesianModule"]
 
 class BayesianModule(Module):
     """
-    This class is a Torch nn.Module container used to reparametrize the parameters of any torch model or module with
+    This class is a Torch 'nn.Module' container used to reparametrize the parameters of any torch model or module with
     some variational posterior like for Bayes-by-Backprop approximate variational inference as in the paper "Weight
     Uncertainty in Neural Networks" by Blundell et al.
 
     Should be called before weights are registered to optimizer, otherwise, manually register new parameters to
-    optimizer.
+    optimizer in the definition of the variational posterior.
 
     Notes
     -----
@@ -76,20 +76,20 @@ class BayesianModule(Module):
             The module to make bayesian.
         variational_posterior : Optional[str | Tuple[str, Dict]]
             The variational posterior distribution for the parameters. Either the name (str) of the variational
-            posterior or a tuple of its name and keyword arguments. Defaults to GaussianPosterior.
+            posterior or a tuple of its name and keyword arguments. Defaults to 'GaussianPosterior'.
         prior : Optional[str | Tuple[str, Dict]]
             The prior distribution for the parameters. Either the name (str) of the prior or a tuple of its name and
-            keyword arguments. Defaults to GaussianPrior with 0 mean and unit standard deviation.
+            keyword arguments. Defaults to 'GaussianPrior' with 0 mean and unit standard deviation.
         dtype: Optional[_dtype]
             The dtype on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
-            order to track the device and dtype of the module's parameters through calls to _apply so that the KL
+            order to track the device and dtype of the module's parameters through calls to '_apply' so that the KL
             accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
-            dtype. Recommended to use BayesianModule(...).to(device, dtype) instead of this argument.
+            dtype. Recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument.
         device: Optional[Device]
             The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized
             in order to track the device and dtype of the module's parameters through calls to _apply so that the KL
             accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
-            device. Recommended to use BayesianModule(...).to(device, dtype) instead of this argument.
+            device. Recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument.
         debug : bool
             Whether to print debug messages. Defaults to False.
 

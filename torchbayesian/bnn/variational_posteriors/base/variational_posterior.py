@@ -5,7 +5,7 @@
     @Creation Date:     07/2025
     @Last modification: 08/2025
 
-    @Description:       This file contains the VariationalPosterior base class for all variational posteriors used for
+    @Description:       This file contains the 'VariationalPosterior' base class for all variational posteriors used for
                         Bayes-by-backprop variational inference.
 """
 
@@ -17,9 +17,9 @@ from torch import Tensor
 from torch.distributions import Distribution
 from torch.nn import Module
 from torch.types import (
+    Device,
     _dtype,
-    _size,
-    Device
+    _size
 )
 
 
@@ -36,10 +36,10 @@ class VariationalPosterior(Module, ABC):
     method. These represent the corresponding attributes of the parameter that is being replaced by the variational
     posterior.
 
-    In the constructor __init__ methods of subclasses of VariationalPosterior:
-    (1) Call  super().__init__(...) then;
-    (2) Create empty variational parameters with appropriate size. e.g. self.mu = nn.Parameter(torch.empty(...)) then;
-    (3) Call self.reset_parameters() at the end of __init__ to initialize the variational parameters.
+    In the constructor '__init__' methods of subclasses of VariationalPosterior:
+    (1) Call  'super().__init__(...)' then;
+    (2) Create empty variational parameters with appropriate size. e.g. 'self.mu = nn.Parameter(torch.empty(...))' then;
+    (3) Call 'self.reset_parameters()' at the end of '__init__' to initialize the variational parameters.
     """
 
     def __init__(
@@ -65,11 +65,12 @@ class VariationalPosterior(Module, ABC):
         super().__init__()
 
         # Track replaced parameter's supposed shape, dtype and device.
-        # Does so by registering an empty buffer so that calls to .to(device, dtype) update the replaced parameter'
+        # Does so by registering an empty buffer so that calls to '.to(device, dtype)' update the replaced parameter's
         # supposed shape, dtype and device.
         # This is used to instantiate priors fitting the posterior for KL divergence evaluation.
-        # Another (perhaps cleaner/more efficient ?) approach would be to overwrite/wrap the _apply(fn) method, which is
-        # called by .to(), .cuda(), etc., so that it updates attributes self.dtype and self.device, e.g. with a probe:
+        # Another (perhaps cleaner/more efficient ?) approach would be to overwrite/wrap the '_apply(fn)' method, which
+        # is called by '.to()', '.cuda()', etc., so that it updates attributes 'self.dtype' and 'self.device',
+        # e.g. with a probe:
         # def _apply(fn, ...)
         #    super()._apply(fn, ...)
         #    probe = fn(torch.empty(0, dtype=self.dtype, device=self.device))
