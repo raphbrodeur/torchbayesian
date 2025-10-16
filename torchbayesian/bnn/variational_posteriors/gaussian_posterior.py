@@ -71,7 +71,7 @@ class GaussianPosterior(VariationalPosterior):
         Initializes the variational parameters mu and rho of the posterior N(mu, sigma), where sigma = ln(1 + exp(rho)).
         """
         torch.nn.init.normal_(self.mu, mean=0.0, std=0.1)
-        torch.nn.init.constant_(self.rho, -5.0)             # Makes initial sigma = 0.0067...
+        torch.nn.init.constant_(self.rho, -3.0)
 
     @property
     def sigma(self) -> Tensor:
