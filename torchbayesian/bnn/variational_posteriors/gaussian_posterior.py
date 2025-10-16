@@ -68,13 +68,10 @@ class GaussianPosterior(VariationalPosterior):
 
     def reset_parameters(self) -> None:
         """
-        Initializes the variational parameters.
-
-        TODO init method factory
+        Initializes the variational parameters mu and rho of the posterior N(mu, sigma), where sigma = ln(1 + exp(rho)).
         """
-        # TODO dummy initialization for the moment
         torch.nn.init.normal_(self.mu, mean=0.0, std=0.1)
-        torch.nn.init.constant_(self.rho, -3.0)             # Makes sigma around 0.02
+        torch.nn.init.constant_(self.rho, -5.0)             # Makes initial sigma = 0.0067...
 
     @property
     def sigma(self) -> Tensor:
