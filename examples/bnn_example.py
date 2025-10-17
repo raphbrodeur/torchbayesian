@@ -143,19 +143,27 @@ if __name__ == '__main__':
 
     test_domain = torch.linspace(-8.5, 8.5, 5000).unsqueeze(1)
 
+    # For each forward pass, the BNN model samples new weights from the learned posterior distributions. Therefore, two
+    # forward passes may output different values.
 
-    # ...
 
+    # 5.1 Single forward pass :
+
+    # One can still do a single forward pass, just like with a regular model, but this is effectively drawing a single
+    # sample from the BNN/learned predictive distribution.
+
+    # Single forward pass of the model
     model.eval()
     with torch.no_grad():
         y_pred = model(test_domain.to(device))  # Draws parameters and uses them for a single forward pass
 
+    # Visualization
     fig, ax = plt.subplots()
-    ax.plot(test_domain.squeeze(1).cpu(), y_pred.squeeze(1).cpu(), color="#4F609C", zorder=2, label="Prediction from 1 BNN sample")
+    ax.plot(test_domain.squeeze(1).cpu(), y_pred.squeeze(1).cpu(), color="#4F609C", zorder=2, label="Prediction")
     ax.scatter(-100., -100., color="black", s=10, marker="o", zorder=1, label="Training data")  # Dummy point for legend
     for x, y in dataset:
         ax.scatter(x.item(), y.item(), color="black", s=10, marker="o", zorder=1)
-    ax.set_title("...")
+    ax.set_title("Prediction of 1 sample from the BNN")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim(-8.5, 8.5)
@@ -164,21 +172,26 @@ if __name__ == '__main__':
     plt.show()
 
 
-    # ...
+    # 5.2 Multiple forward passes :
+
+    # By drawing multiple samples from the BNN (which is done by doing multiple forward passes over the same input), we
+    # can better characterize the underlying predictive distribution of the trained model and its variability.
 
     fig, ax = plt.subplots()
 
+    # Multiple forward passes of the model
     num_bnn_samples = 1000
     for _ in range(num_bnn_samples):
         model.eval()
         with torch.no_grad():
             y_pred = model(test_domain.to(device))  # Draws parameters and uses them for a single forward pass
 
+    # Visualization
         ax.plot(test_domain.squeeze(1).cpu(), y_pred.squeeze(1).cpu(), color="#4F609C", alpha=0.01, zorder=2)
     ax.scatter(-100., -100., color="black", s=10, marker="o", zorder=1, label="Training data")  # Dummy point for legend
     for x, y in dataset:
         ax.scatter(x.item(), y.item(), color="black", s=10, marker="o", zorder=1)
-    ax.set_title(f"{num_bnn_samples} samples from the BNN")
+    ax.set_title(f"Predictions from {num_bnn_samples} samples from the BNN")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim(-8.5, 8.5)
@@ -187,23 +200,26 @@ if __name__ == '__main__':
     plt.show()
 
 
-    # ...
+    # 5.3 BNN prediction :
 
-    # Get statistics from the BNN samples to characterize the predictive distribution and the model uncertainty
+    # To make a prediction using the BNN model, one can do multiple forward passes of the model and get statistics from
+    # them to characterize the predictive distribution and the model's uncertainty about some output.
 
-    fig, ax = plt.subplots()
-
+    # Multiple forward passes of the model
     bnn_samples = []
-    num_bnn_samples = 1000
+    num_bnn_samples = 1000              # In practice, 20 should be enough for most applications
     for _ in range(num_bnn_samples):
         model.eval()
         with torch.no_grad():
             y_pred = model(test_domain.to(device))  # Draws parameters and uses them for a single forward pass
             bnn_samples.append(y_pred.squeeze().cpu().numpy())
 
+    # Statistics over the BNN samples
     y_mean = np.mean(bnn_samples, axis=0)   # Mean prediction of all the samples
     y_std = np.std(bnn_samples, axis=0)     # Standard deviation of the predictions from all the samples
 
+    # Visualization
+    fig, ax = plt.subplots()
     ax.plot(test_domain.squeeze(1).cpu(), y_mean, color="#4F609C", zorder=2, label=f"Mean prediction")
     ax.fill_between(
         test_domain.squeeze(1).cpu(),
@@ -216,7 +232,7 @@ if __name__ == '__main__':
     ax.scatter(-100., -100., color="black", s=10, marker="o", zorder=1, label="Training data")  # Dummy point for legend
     for x, y in dataset:
         ax.scatter(x.item(), y.item(), color="black", s=10, marker="o", zorder=1)
-    ax.set_title(f"{num_bnn_samples} samples from the BNN")
+    ax.set_title(f"Prediction and uncertainty using {num_bnn_samples} BNN samples")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim(-8.5, 8.5)
