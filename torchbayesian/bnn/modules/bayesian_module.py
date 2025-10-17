@@ -41,8 +41,8 @@ class BayesianModule(Module):
     some variational posterior like for Bayes-by-Backprop approximate variational inference as in the paper "Weight
     Uncertainty in Neural Networks" by Blundell et al.
 
-    Should be called before weights are registered to optimizer, otherwise, manually register new parameters to
-    optimizer in the definition of the variational posterior.
+    Should be called before weights are registered to optimizer, otherwise, manually register the new variational
+    parameters to the optimizer.
 
     Notes
     -----
