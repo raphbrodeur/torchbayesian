@@ -8,7 +8,7 @@
 It makes [Bayes-by-Backprop](https://arxiv.org/abs/1505.05424) and **variational inference** effortless and **compatible with any** `nn.Module`, without you having to rewrite your model using custom layers or change your usual PyTorch workflow.
 Its goal is to make **uncertainty-aware** and **Bayesian deep learning** as easy as working with any traditional neural network.
 
-### One line to make any torch model into a BNN
+### One line to transform any torch model into a BNN
 
 Simply wrap any `nn.Module` model `bnn.BayesianModule` to make it a BNN :
 
