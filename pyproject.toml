@@ -7,7 +7,6 @@ name = "torchbayesian"
 version = "0.1.0"
 description = "One line to turn any PyTorch model into a BNN — effortless uncertainty quantification."
 readme = "README.md"
-url = "https://github.com/raphbrodeur/torchbayesian"
 requires-python = ">=3.10"
 dependencies = ["torch>=1.10"]
 license = "Apache-2.0"
@@ -33,3 +32,6 @@ classifiers=[
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
+
+[project.urls]
+Homepage = "https://github.com/raphbrodeur/torchbayesian"
