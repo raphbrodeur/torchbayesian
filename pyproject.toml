@@ -4,11 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "torchbayesian"
-version = "0.1.0"
+version = "0.1.1"
 description = "One line to turn any PyTorch model into a BNN — effortless uncertainty quantification."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["torch>=1.10"]
 license = "Apache-2.0"
 license-files = ["LICENSE*"]
 authors = [{name = "Raphael Brodeur", email = "raphael.brodeur@gmail.com"}]
