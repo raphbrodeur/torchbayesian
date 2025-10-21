@@ -20,14 +20,15 @@ net = BayesianModule(net)  # 'net' is now a BNN
 
 The resulting model behaves exactly like any standard `nn.Module`, but instead of learning fixed weight values, your model now learns distributions from which weight values are sampled during training and inference, allowing it to capture uncertainty in its parameters and predictions.
 
-Figure
-
+<p align="center">
+    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/bnn_1d_regression.png" width="50%">
+</p>
 
 ## Key Features
 
 - **One line to "BNN-ize" any model** — Turn any already existing PyTorch model into a BNN with a single line of code. No need to rewrite your model, redefine layers, or modify your existing architecture.
 - **Truly compatible with all layers** — Unlike other "BNN-izers" that swap specific supported layers for variational versions, torchbayesian converts every trainable parameter in your model into a variational posterior module, actually making the entire model Bayesian, not just parts of it.
-- **PyTorch-native design** — Works entirely within the PyTorch framework; training, inference, evaluation remain unchanged. Fully compatible with other PyTorch-based tools such as [Lightning](https://lightning.ai/docs/pytorch/stable/), [TorchMetrics](https://lightning.ai/docs/torchmetrics/stable/), and [MONAI](https://monai.io/).
+- **PyTorch-native design** — Works entirely within PyTorch's framework; training, inference, evaluation remain unchanged. Fully compatible with other PyTorch-based tools such as [Lightning](https://lightning.ai/docs/pytorch/stable/), [TorchMetrics](https://lightning.ai/docs/torchmetrics/stable/), and [MONAI](https://monai.io/).
 - **Custom priors and variational posteriors** — Specify priors and variational posteriors directly as arguments. You can also define your own custom priors and variational posteriors and register them with the API using a simple decorator logic. This allows both plug-and-play use and deep customization without having to touch the core library.
 - **KL divergence easily accessible** — Retrieve the model's KL divergence at any point using the `.kl_divergence()` method of `bnn.BayesianModule`.
 - **Flexible KL computation** — When analytic computation is not available for some pair of variational posterior and prior, falls back to an estimation using Monte-Carlo sampling. This ensures generality and support for arbitrary user-defined distributions.
@@ -40,27 +41,26 @@ torchbayesian works with Python 3.10+ and has a direct dependency on [PyTorch](h
 
 To install the current release, run :
 
-...
+```bash
+pip install torchbayesian
+```
 
 ## Getting started
 
-How to use it
+> This 	`README.md` is still a work in progress. Further details will be added.
 
-How it works
+A working example is available at [torchbayesian/examples](https://github.com/raphbrodeur/torchbayesian/tree/main/examples).
 
-KL divergence
+The [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Evidence_lower_bound) of the model can be retrieved at any point using the `.kl_divergence()` method of `bnn.BayesianModule`.
 
-Example .py
-
-Factories
+Different priors and posteriors can be used.
 
 ## Motivation
 
-...
-
-## License
-
-...
+Modern deep learning models are remarkably powerful, but they often make predictions with high confidence even when they’re wrong.
+In safety-critical domains such as health, finance, or autonomous systems, this overconfidence makes it difficult to trust model outputs and impedes automatization.
+`torchbayesian` was created to make Bayesian Neural Networks (BNNs) and uncertainty quantification in PyTorch as simple as possible.
+The goal is to lower the barrier to practical Bayesian deep learning, enabling researchers and practitioners to integrate principled uncertainty estimation directly into their existing framework.
 
 ## Citation
 
