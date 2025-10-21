@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torchbayesian"
+version = "0.1.0"
+description = "One line to turn any PyTorch model into a BNN — effortless uncertainty quantification."
+readme = "README.md"
+url = "https://github.com/raphbrodeur/torchbayesian"
+requires-python = ">=3.10"
+dependencies = ["torch>=1.10"]
+license = "Apache-2.0"
+license-files = ["LICENSE*"]
+authors = [{name = "Raphael Brodeur", email = "raphael.brodeur@gmail.com"}]
+keywords = [
+    "bayes-by-backprop",
+    "bayesian",
+    "bnn",
+    "deep-learning",
+    "neural-network",
+    "pytorch",
+    "torch",
+    "uncertainty"
+]
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
