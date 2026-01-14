@@ -25,7 +25,7 @@ from torchbayesian.bnn.utils.factories.factory import Factory
 from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
 
 
-__all__ = ["get_posterior", "PosteriorFactory"]
+__all__ = ["get_posterior", "get_variational_posterior", "PosteriorFactory", "VariationalPosteriorFactory"]
 
 
 # Create a 'VariationalPosterior' Factory() and register some factory functions to it
@@ -40,6 +40,9 @@ def gaussian_posterior_factory() -> Type[GaussianPosterior]:
 @PosteriorFactory.register_factory_function("normal")
 def normal_posterior_factory() -> Type[GaussianPosterior]:
     return GaussianPosterior
+
+
+VariationalPosteriorFactory = PosteriorFactory
 
 
 # Create a 'VariationalPosterior' instantiation function
@@ -75,3 +78,6 @@ def get_posterior(param: Parameter | Tensor, posterior: str | Tuple[str, Dict]) 
     )
 
     return posterior_instance
+
+
+get_variational_posterior = get_posterior
