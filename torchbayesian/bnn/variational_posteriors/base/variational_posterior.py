@@ -32,11 +32,10 @@ class VariationalPosterior(Module, ABC):
 
     Notes
     -----
-    Subclasses used in 'bnn.BayesianModule' must accept arguments 'shape', 'dtype' and 'device' in their constructor
-    method. These represent the corresponding attributes of the parameter that is being replaced by the variational
-    posterior.
+    Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; their constructor ('__init__') method
+    must accept arguments 'shape' : _size, 'dtype' : Optional[_dtype] and 'device' : Optional[Device] !!
 
-    In the constructor '__init__' methods of subclasses of VariationalPosterior:
+    In the constructor '__init__' method of a custom subclass of 'VariationalPosterior' :
     (1) Call  'super().__init__(...)' then;
     (2) Create empty variational parameters with appropriate size. e.g. 'self.mu = nn.Parameter(torch.empty(...))' then;
     (3) Call 'self.reset_parameters()' at the end of '__init__' to initialize the variational parameters.
@@ -51,7 +50,7 @@ class VariationalPosterior(Module, ABC):
     ) -> None:
         """
         Initialize the variational posterior. Tracks the supposed attributes of the replaced parameter through calls to
-        _apply like .to(), .cuda(), etc.. This is used to instantiate priors fitting the variational posterior.
+        '_apply' like '.to()', '.cuda()', etc... This is used to instantiate priors fitting the variational posterior.
 
         Parameters
         ----------

@@ -26,6 +26,11 @@ def enable_mc_dropout(module: Module) -> None:
     ----------
     module : Module
         The torch 'nn.Module' for which to enable Monte Carlo dropout.
+
+    Examples
+    --------
+        net.eval()                  # 'net' is a typical 'nn.Module' trained with dropout
+        enable_mc_dropout(net)      # MC dropout is now possible
     """
     for m in module.modules():
         if isinstance(m, _DropoutNd):

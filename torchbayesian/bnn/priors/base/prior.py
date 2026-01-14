@@ -5,7 +5,7 @@
     @Creation Date:     08/2025
     @Last modification: 08/2025
 
-    @Description:       This file contains the Prior base class for all parameter prior distributions used for
+    @Description:       This file contains the 'Prior' base class for all parameter prior distributions used for
                         Bayes-by-backprop variational inference.
 """
 
@@ -26,8 +26,8 @@ class Prior(ABC):
 
     Notes
     -----
-    Subclasses of 'Prior' used in 'bnn.BayesianModule' must accept 'shape' : _size, 'dtype' : Optional[_dtype] and
-    'device' : Optional[Device] as argument in their constructor ('__init__') method !!
+    Subclasses of 'Prior' used in 'bnn.BayesianModule' must work with 'get_prior()'; their constructor ('__init__')
+    method must accept arguments 'shape' : _size, 'dtype' : Optional[_dtype] and 'device' : Optional[Device] !!
     """
 
     @property
