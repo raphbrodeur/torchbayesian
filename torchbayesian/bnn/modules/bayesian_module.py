@@ -303,8 +303,10 @@ class BayesianModule(Module):
         for name, module in self.named_modules():
             # Compute KL divergence only for BNN modules
             if isinstance(module, VariationalPosterior):
-                # Get posterior and prior distributions
+                # Get posterior distribution
                 posterior_dist = module.distribution
+
+                # Instantiate prior and get its distribution
                 prior_dist = get_prior(
                     shape=module.shape,
                     prior=self._prior,

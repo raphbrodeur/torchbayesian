@@ -7,7 +7,7 @@
 
     @Description:       This file contains the 'register_reparametrization()' function which is used to replace a Torch
                         parameter or buffer by a variational posterior 'nn.Module' from which the parameter or buffer is
-                        sampled. Adapted from PyTorch's nn.utils.parametrize module in order to remove the original parameter
+                        sampled. Adapted from PyTorch's 'nn.utils.parametrize' in order to remove the original parameter
                         from the registered parameters and the state dict.
 """
 
