@@ -1,4 +1,12 @@
-from torchbayesian.bnn.modules import BayesianModule
+from torchbayesian.bnn.modules import (
+    BayesianAlphaDropout,
+    BayesianDropout,
+    BayesianDropout1d,
+    BayesianDropout2d,
+    BayesianDropout3d,
+    BayesianFeatureAlphaDropout,
+    BayesianModule
+)
 from torchbayesian.bnn.priors import (
     GaussianPrior,
     NormalPrior,
