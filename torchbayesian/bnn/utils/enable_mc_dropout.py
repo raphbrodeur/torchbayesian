@@ -14,6 +14,9 @@ from torch.nn import Module
 from torch.nn.modules.dropout import _DropoutNd
 
 
+__all__ = ["enable_mc_dropout"]
+
+
 def enable_mc_dropout(module: Module) -> None:
     """
     Enables dropout at inference time for Monte Carlo Dropout (see paper "Dropout as a Bayesian Approximation:

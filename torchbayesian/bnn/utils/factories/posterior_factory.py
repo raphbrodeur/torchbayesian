@@ -25,7 +25,12 @@ from torchbayesian.bnn.utils.factories.factory import Factory
 from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
 
 
-__all__ = ["get_posterior", "get_variational_posterior", "PosteriorFactory", "VariationalPosteriorFactory"]
+__all__ = [
+    "get_posterior",
+    "get_variational_posterior",
+    "PosteriorFactory",
+    "VariationalPosteriorFactory"
+]
 
 
 # Create a 'VariationalPosterior' Factory() and register some factory functions to it
