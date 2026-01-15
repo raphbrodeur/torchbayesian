@@ -5,9 +5,9 @@
     @Creation Date:     07/2025
     @Last modification: 08/2025
 
-    @Description:       This file contains the register_reparametrization() function which is used to replace a Torch
-                        parameter or buffer by a variational posterior from which the parameter or buffer is sampled.
-                        Adapted from PyTorch's nn.utils.parametrize module in order to remove the original parameter
+    @Description:       This file contains the 'register_reparametrization()' function which is used to replace a Torch
+                        parameter or buffer by a variational posterior 'nn.Module' from which the parameter or buffer is
+                        sampled. Adapted from PyTorch's 'nn.utils.parametrize' in order to remove the original parameter
                         from the registered parameters and the state dict.
 """
 
@@ -39,12 +39,12 @@ class Reparametrization(Module):
     This class wraps the parametrization and handles safety checks for the replacement by the variational posterior and
     its forward call.
 
-    It is the type of module.reparametrizations[tensor_name] when module[tensor_name] has been reparametrized with
-    register_parametrization().
+    It is the type of 'module.reparametrizations[tensor_name]' when 'module[tensor_name]' has been reparametrized with
+    'register_parametrization()'.
 
     Notes
     -----
-    This class is used internally by register_parametrization(). It shall not be instantiated by the user.
+    This class is used internally by 'register_parametrization()'. It shall not be instantiated by the user.
     """
 
     def __init__(

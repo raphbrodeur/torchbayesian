@@ -52,7 +52,7 @@ class BayesianModule(Module):
 
     If one wants to use custom variational posteriors and priors, simply register a factory function for the custom
     posterior or prior to the factories 'PosteriorFactory' or 'PriorFactory', as detailed in the docs of 'Factory' in
-    file 'torchbayesian.bnn.utils.factories'.
+    file 'torchbayesian.bnn.utils.factories.factory.py'.
     """
 
     def __init__(
@@ -66,9 +66,11 @@ class BayesianModule(Module):
             debug: bool = False
     ) -> None:
         """
-        Makes the module a bayesian neural network with a variational distribution over each parameter. Reparametrizes
-        the parameters of any torch model or module with some variational posterior like for Bayes-by-Backprop
-        approximate variational inference as in the paper "Weight Uncertainty in Neural Networks" by Blundell et al.
+        Makes the module a bayesian neural network with a variational distribution over each parameter.
+
+        Reparametrizes the parameters of any torch model or module with some variational posterior like for
+        Bayes-by-Backprop approximate variational inference as in the paper "Weight Uncertainty in Neural Networks" by
+        Blundell et al.
 
         Parameters
         ----------
@@ -158,7 +160,8 @@ class BayesianModule(Module):
             num_samples: int
     ) -> Tensor:
         """
-        Computes the KL divergence KL(posterior || prior) of the BayesianModule through a Monte Carlo approximation.
+        Computes the KL divergence KL(posterior || prior) of the 'BayesianModule' through a Monte Carlo approximation.
+
         Core idea is that KL(q || p) = Expectation[log q(w) - log p(w)] over w ~ q(w).
 
         Parameters
@@ -173,7 +176,7 @@ class BayesianModule(Module):
         Returns
         -------
         approx_kl_div : Tensor
-            The MC-approximate KL divergence KL(posterior || prior) of the BayesianModule.
+            The MC-approximate KL divergence KL(posterior || prior) of the 'BayesianModule'.
         """
         # Sample w ~ q(w)
         posterior_samples = posterior.rsample((num_samples, ))
@@ -192,10 +195,8 @@ class BayesianModule(Module):
             approx_num_samples: Optional[int] = None
     ) -> Tensor:
         """
-        Gets the elementwise KL divergence KL(posterior || prior) of a parameter from the BayesianModule.
+        Gets the elementwise KL divergence KL(posterior || prior) of a parameter from the 'BayesianModule'.
 
-        Notes
-        -----
         If analytical solution is not defined, defaults to MC approximation of the KL divergence by sampling from the
         posterior and prior.
 
@@ -212,7 +213,7 @@ class BayesianModule(Module):
         Returns
         -------
         kl_div : Tensor
-            The KL divergence KL(posterior || prior) of the BayesianModule.
+            The KL divergence KL(posterior || prior) of the 'BayesianModule'.
 
         Raises
         ------
@@ -256,21 +257,19 @@ class BayesianModule(Module):
             approx_num_samples: Optional[int] = None
     ) -> Tensor:
         """
-        Gets the KL divergence KL(posterior || prior) of all parameters in the BayesianModule.
+        Gets the KL divergence KL(posterior || prior) of all parameters in the 'BayesianModule'.
 
-        Notes
-        -----
         If analytical solution is not defined between the two distributions, MC approximation of the KL divergence can
         be used.
 
-        Warning
-        -------
-        KL divergence is computer using an accumulator in order to avoid the overhead with using a list of KL terms, but
-        the accumulator must be on appropriate device which is why BayesianModule tracks a buffer _kl_meta. As such,
-        if BayesianModule is not initialized on same device as the original module, and that no move to appropriate
-        dtype/device is done afterward (e.g. using net.to(...) or net.cuda()), then accumulator's dtype/device might not
-        fit with KL divergence terms coming from the parameters. This is easily fixable by calling .to(...) to move all
-        parameters and buffers of the BayesianModule to the same dtype/device.
+        Warning !
+        ---------
+        KL divergence is computed using an accumulator in order to avoid the overhead with using a list of KL terms, but
+        the accumulator must be on appropriate device which is why 'BayesianModule' tracks the buffer '_kl_meta'.
+        As such, if 'BayesianModule' is not initialized on same device as the original module, and if no move to
+        appropriate dtype/device is done afterward (e.g. using 'net.to(...)' or 'net.cuda()'), then the accumulator's
+        dtype/device might not fit with KL divergence terms coming from the parameters. This is easily fixable
+        by calling .to(...) to move all parameters and buffers of the 'BayesianModule' to the same dtype/device.
 
         Parameters
         ----------
@@ -287,7 +286,7 @@ class BayesianModule(Module):
         Returns
         -------
         kl_div : Tensor
-            The KL divergence KL(posterior || prior) of the BayesianModule.
+            The KL divergence KL(posterior || prior) of the 'BayesianModule'.
 
         Raises
         ------
@@ -304,8 +303,10 @@ class BayesianModule(Module):
         for name, module in self.named_modules():
             # Compute KL divergence only for BNN modules
             if isinstance(module, VariationalPosterior):
-                # Get posterior and prior distributions
+                # Get posterior distribution
                 posterior_dist = module.distribution
+
+                # Instantiate prior and get its distribution
                 prior_dist = get_prior(
                     shape=module.shape,
                     prior=self._prior,
