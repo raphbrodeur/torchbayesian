@@ -110,5 +110,16 @@ class GaussianPrior(Prior):
         """
         return Normal(self.mu, self.sigma)
 
+    def extra_repr(self) -> str:
+        """
+        Returns the extra representation of the prior.
+
+        Returns
+        -------
+        extra_repr : str
+            The str extra representation of the prior.
+        """
+        return f"mu: {self.mu.size()}, sigma: {self.sigma.size()}"
+
 
 NormalPrior = GaussianPrior
