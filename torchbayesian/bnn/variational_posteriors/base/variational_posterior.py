@@ -141,3 +141,14 @@ class VariationalPosterior(Module, ABC):
             A value of the parameter, sampled from the variational posterior.
         """
         return self.sample_parameters()
+
+    def extra_repr(self) -> str:
+        """
+        Returns the extra representation of the module.
+
+        Returns
+        -------
+        extra_repr : str
+            The str extra representation of the module.
+        """
+        return f"shape={self.shape}"
