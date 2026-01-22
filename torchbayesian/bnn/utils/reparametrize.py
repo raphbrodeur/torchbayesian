@@ -117,6 +117,30 @@ class Reparametrization(Module):
 
         return x
 
+    def extra_repr(self) -> str:
+        """
+        Returns the variational posterior put in place.
+
+        Returns
+        -------
+        extra_repr : str
+            The str extra representation of the reparametrization.
+        """
+        return f"{self.variational_posterior}"
+
+    def __repr__(self) -> str:
+        """
+        Representation of the reparametrization.
+
+        Overwrites nn.Module.__repr__ in order to supress child modules representation.
+
+        Returns
+        -------
+        repr : str
+            The str representation of the reparametrization.
+        """
+        return f"{self.__class__.__name__}({self.extra_repr()})"
+
 
 def register_reparametrization(
     module: Module,
@@ -273,11 +297,13 @@ def _inject_property(module: Module, tensor_name: str) -> None:
     """
     Injects a property into module[tensor_name].
 
+    This function is the core of the reparametrization mechanism.
+
     It assumes that the class in the module has already been modified from its original one using _inject_new_class and
     that the tensor under :attr:`tensor_name` has already been moved out.
 
     Same as in PyTorch's implementation but the getter function is modified to get reparametrization instead of
-    parametrization.
+    parametrization, and the setter function is modified to ...
 
     Parameters
     ----------
