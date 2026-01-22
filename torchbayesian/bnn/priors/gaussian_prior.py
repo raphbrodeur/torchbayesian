@@ -3,7 +3,7 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 08/2025
+    @Last modification: 01/2026
 
     @Description:       This file contains the 'GaussianPrior' class, a parameter gaussian prior distribution for
                         Bayes-by-backprop. It is a common prior distribution for BBB variational inference in practice.
@@ -109,6 +109,17 @@ class GaussianPrior(Prior):
             A torch.Distribution.
         """
         return Normal(self.mu, self.sigma)
+
+    def extra_repr(self) -> str:
+        """
+        Returns the extra representation of the prior.
+
+        Returns
+        -------
+        extra_repr : str
+            The str extra representation of the prior.
+        """
+        return f"mu: {self.mu.size()}, sigma: {self.sigma.size()}"
 
 
 NormalPrior = GaussianPrior

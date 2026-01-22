@@ -3,12 +3,13 @@
     @Author:            Raphael Brodeur, PyTorch
 
     @Creation Date:     07/2025
-    @Last modification: 08/2025
+    @Last modification: 01/2026
 
     @Description:       This file contains the 'register_reparametrization()' function which is used to replace a Torch
                         parameter or buffer by a variational posterior 'nn.Module' from which the parameter or buffer is
-                        sampled. Adapted from PyTorch's 'nn.utils.parametrize' in order to remove the original parameter
-                        from the registered parameters and the state dict.
+                        sampled. This is done via a property injection mechanism. Adapted from PyTorch's
+                        'nn.utils.parametrize' in order to remove the original parameter from the registered parameters
+                        and the state dict.
 """
 
 from copy import deepcopy
@@ -116,6 +117,30 @@ class Reparametrization(Module):
         x = self.variational_posterior()
 
         return x
+
+    def extra_repr(self) -> str:
+        """
+        Returns the variational posterior put in place.
+
+        Returns
+        -------
+        extra_repr : str
+            The str extra representation of the reparametrization.
+        """
+        return f"{self.variational_posterior}"
+
+    def __repr__(self) -> str:
+        """
+        Representation of the reparametrization.
+
+        Overwrites nn.Module.__repr__ in order to supress child modules representation.
+
+        Returns
+        -------
+        repr : str
+            The str representation of the reparametrization.
+        """
+        return f"{self.__class__.__name__}({self.extra_repr()})"
 
 
 def register_reparametrization(
@@ -273,11 +298,17 @@ def _inject_property(module: Module, tensor_name: str) -> None:
     """
     Injects a property into module[tensor_name].
 
-    It assumes that the class in the module has already been modified from its original one using _inject_new_class and
-    that the tensor under :attr:`tensor_name` has already been moved out.
+    This function is the core of the reparametrization mechanism; this function replaces 'module[tensor_name]' (e.g.
+    'module.weight') by a python property whose getter function computes/samples a tensor by calling the
+    'Reparametrization' module (which itself calls the variational posterior).
+
+    It assumes that the class in the module has already been modified from its original one using '_inject_new_class'
+    and that the tensor under :attr:`tensor_name` has already been moved out.
 
     Same as in PyTorch's implementation but the getter function is modified to get reparametrization instead of
-    parametrization.
+    parametrization, and the setter function is modified to prevent assignment to the original parameter tensor (which
+    is replaced by a call to a 'Reparametrization' module). This might be changed in the future to allow assigning a new
+    'Reparametrization'.
 
     Parameters
     ----------
@@ -286,10 +317,13 @@ def _inject_property(module: Module, tensor_name: str) -> None:
     tensor_name : str
         The name of the property to create.
     """
-    # We check if an attribute already exists under that name.
-    # This should never fire if register_parametrization is correctly implemented
+    # We check if an attribute already exists under that name
+    # This should never fire if register_parametrization is correctly implemented.
+    # (We already 'delattr(module, tensor_name)' in 'register_reparametrization',
+    # this ensures we are not overwriting some attribute)
     assert not hasattr(module, tensor_name)
 
+    # Caching helper
     @torch.jit.unused
     def get_cached_reparametrization(reparametrization) -> Tensor:
         global _cache
@@ -300,9 +334,11 @@ def _inject_property(module: Module, tensor_name: str) -> None:
             _cache[key] = tensor
         return tensor
 
-    def get_parametrized(self) -> Tensor:
+    # Getter function
+    # Returns a call to the 'Reparametrization' Module
+    def get_reparametrized(self) -> Tensor:
         if torch.jit.is_scripting():
-            raise RuntimeError("Parametrization is not working with scripting.")
+            raise RuntimeError("Reparametrization is not working with scripting.")
 
         reparametrization = self.reparametrizations[tensor_name]
 
@@ -316,19 +352,26 @@ def _inject_property(module: Module, tensor_name: str) -> None:
             elif torch._C._get_tracing_state() is not None:
                 # Tracing
                 raise RuntimeError(
-                    "Cannot trace a model while caching parametrizations."
+                    "Cannot trace a model while caching reparametrizations."
                 )
             else:
                 return get_cached_reparametrization(reparametrization)
 
         else:
-            # If caching is not active, this function just evaluates the parametrization
+            # If caching is not active, this function just evaluates the reparametrization
             return reparametrization()
 
+    # Setter function
+    # For now, raises an error to prevent assignment to the original tensor
     def set_original(self, value: Tensor) -> None:
-        if torch.jit.is_scripting():
-            raise RuntimeError("Parametrization is not working with scripting.")
+        # if torch.jit.is_scripting():
+        #     raise RuntimeError("Reparametrization is not working with scripting.")
 
-        self.reparametrizations[tensor_name].right_inverse(value)
+        raise RuntimeError(
+            f"Cannot assign to '{tensor_name}' because it is reparametrized. "
+            f"Access the reparametrization's attributes (e.g. parameters) via 'module.reparametrizations["
+            f"'{tensor_name}'].variational_posterior."
+        )
 
-    setattr(module.__class__, tensor_name, property(get_parametrized, set_original))
+    # Inject the property with the specified getter and setter functions
+    setattr(module.__class__, tensor_name, property(get_reparametrized, set_original))
