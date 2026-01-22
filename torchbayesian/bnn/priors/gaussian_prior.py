@@ -72,9 +72,9 @@ class GaussianPrior(Prior):
         super().__init__()
 
         if not isinstance(mu, Tensor) and shape is None:
-            raise ValueError(f"Must provide 'shape' argument or a tensor 'mu' with appropriate shape.")
+            raise ValueError(f"Must provide 'shape' argument or tensors 'mu' and 'sigma' with appropriate shape.")
         if not isinstance(sigma, Tensor) and shape is None:
-            raise ValueError(f"Must provide 'shape' argument or a tensor 'sigma' with appropriate shape.")
+            raise ValueError(f"Must provide 'shape' argument or tensors 'mu' and 'sigma' with appropriate shape.")
 
         # Defaults to N(0, 1) distribution
         if mu is None:
