@@ -3,7 +3,7 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 08/2025
+    @Last modification: 01/2026
 
     @Description:       This file contains the 'Prior' base class for all parameter prior distributions used for
                         Bayes-by-backprop variational inference.

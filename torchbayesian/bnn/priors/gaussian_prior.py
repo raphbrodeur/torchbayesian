@@ -3,7 +3,7 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 08/2025
+    @Last modification: 01/2026
 
     @Description:       This file contains the 'GaussianPrior' class, a parameter gaussian prior distribution for
                         Bayes-by-backprop. It is a common prior distribution for BBB variational inference in practice.
