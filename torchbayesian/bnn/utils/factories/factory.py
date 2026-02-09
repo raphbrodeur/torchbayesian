@@ -3,7 +3,7 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 01/2026
+    @Last modification: 02/2026
 
     @Description:       This file contains the 'Factory' base class used to instantiate object factories and register
                         factory functions to said instances.
@@ -22,7 +22,7 @@ __all__ = ["Factory"]
 
 class Factory:
     """
-    This class serves as a base for factories.
+    This class is a base class for object factories.
 
     This class serves as a dynamic registry of factory functions so that new factory functions can be registered to
     instances of this class with the decorator register_factory_function(). This allows users, for example, to register
@@ -40,11 +40,13 @@ class Factory:
             types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
             return types[dim - 1]
 
-        # Now, one can get from the normalization factory 'Norm' to get a batch normalization layer
-        batch_norm_layer = Norm["batch", norm_dim]
+        # Now, one can 'get' from the normalization factory 'Norm' to obtain a batch normalization layer
+        batch_norm_layer = Norm["batch", 2]     # norm_dim=2
 
-        # e.g. batch_norm_layer is nn.BatchNorm3d and not nn.BatchNorm3d()
+        # note: batch_norm_layer is nn.BatchNorm3d and not nn.BatchNorm3d()
     """
+
+    _factories: Dict[str, Callable]
 
     def __init__(self) -> None:
         """
@@ -52,9 +54,9 @@ class Factory:
         instantiating it).
         """
         # Create a registry where factory functions are to be keyed to names
-        self._factories: Dict[str, Callable] = {}
+        self._factories = {}
 
-    def __getitem__(self, args: str | Tuple) -> Any:
+    def __getitem__(self, args: str | Tuple[Any, ...]) -> Any:
         """
         Gets an object class for a given name or a tuple of a name and factory function arguments.
 
@@ -63,9 +65,11 @@ class Factory:
 
         Parameters
         ----------
-        args : str | Tuple
+        args : str | Tuple[Any, ...]
             The arguments needed to get the object class. The arguments specify which factory function to get from the
-            registered factory functions and also additional arguments can be used to said factory function.
+            registered factory functions and also additional arguments can be used to said factory function. Either the
+            factory function name or a tuple whose first element is the name of the factory function and whose remaining
+            elements are passed as arguments to the factory function.
 
         Returns
         -------
@@ -114,10 +118,11 @@ class Factory:
         ValueError
             If a factory function is already registered to the instance under the same name.
         """
-        if name.upper() in self.factories:
+        key = name.upper()
+        if key in self.factories:
             raise ValueError(f"There is already a factory function registered under the name {name}.")
 
-        self._factories[name.upper()] = func
+        self._factories[key] = func
 
     def register_factory_function(self, name: str) -> Callable:
         """

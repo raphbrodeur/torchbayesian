@@ -3,10 +3,10 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 01/2026
+    @Last modification: 02/2026
 
-    @Description:       This file contains the 'Prior' base class for all parameter prior distributions used for
-                        Bayes-by-backprop variational inference.
+    @Description:       This file contains the 'Prior' base class for all prior distributions used for Bayes by
+                        Backprop (BBB) variational inference (VI).
 """
 
 from abc import ABC, abstractmethod
@@ -19,23 +19,24 @@ __all__ = ["Prior"]
 
 class Prior(ABC):
     """
-    This class serves as a base class for all priors used for Bayes-by-backprop variational inference.
+    This class serves as a base class for all priors used for Bayes by backprop (BBB) variational inference (VI).
 
     Base class implemented for consistency in the case of possible future implementation of learnable priors and making
-    Prior also a subclass of Module.
+    Prior a child of 'nn.Module' similarly to 'bnn.VariationalPosterior'.
 
-    Notes
+    Warning
     -----
     Subclasses of 'Prior' used in 'bnn.BayesianModule' must work with 'get_prior()'; their constructor ('__init__')
-    method must accept arguments 'shape' : _size, 'dtype' : Optional[_dtype] and 'device' : Optional[Device] !!
+    method must accept arguments 'shape', 'dtype' and 'device'.
     """
 
     @property
     @abstractmethod
     def distribution(self) -> Distribution:
         """
-        A 'torch.distributions.Distribution' corresponding to the prior. This is used for KL computation aligned with
-        torch's framework.
+        A 'torch.distributions.Distribution' corresponding to the prior.
+
+        This is used for KL computation aligned with PyTorch's framework.
 
         Returns
         -------

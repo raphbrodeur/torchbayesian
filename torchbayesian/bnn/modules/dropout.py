@@ -3,9 +3,11 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     01/2026
-    @Last modification: 01/2026
+    @Last modification: 02/2026
 
-    @Description:       This file contains Bayesian implementations of Torch dropout layers.
+    @Description:       This file contains Torch dropout layers for Bayesian neural networks (BNN) via Monte Carlo
+                        dropout (MCD), as described in "Dropout as a Bayesian Approximation: Representing Model
+                        Uncertainty in Deep Learning" by Y. Gal and Z. Ghahramani.
 """
 
 from torch import Tensor
@@ -25,12 +27,22 @@ __all__ = [
 
 class BayesianDropout(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.Dropout'. Remains active in eval mode.
+    This class is an implementation of 'torch.nn.Dropout' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD), as described in "Dropout as a
+    Bayesian Approximation: Representing Model Uncertainty in Deep Learning" by Y. Gal and Z. Ghahramani.
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------
@@ -47,12 +59,21 @@ class BayesianDropout(_DropoutNd):
 
 class BayesianDropout1d(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.Dropout1d'. Remains active in eval mode.
+    This class is an implementation of 'torch.nn.Dropout1d' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD).
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------
@@ -69,12 +90,21 @@ class BayesianDropout1d(_DropoutNd):
 
 class BayesianDropout2d(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.Dropout2d'. Remains active in eval mode.
+    This class is an implementation of 'torch.nn.Dropout2d' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD).
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------
@@ -91,12 +121,21 @@ class BayesianDropout2d(_DropoutNd):
 
 class BayesianDropout3d(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.Dropout3d'. Remains active in eval mode.
+    This class is an implementation of 'torch.nn.Dropout3d' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD).
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------
@@ -113,13 +152,21 @@ class BayesianDropout3d(_DropoutNd):
 
 class BayesianAlphaDropout(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.AlphaDropout'. Remains active in eval
-    mode.
+    This class is an implementation of 'torch.nn.AlphaDropout' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD).
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------
@@ -136,13 +183,21 @@ class BayesianAlphaDropout(_DropoutNd):
 
 class BayesianFeatureAlphaDropout(_DropoutNd):
     """
-    This class is a Bayesian (Monte Carlo Dropout) implementation of 'torch.nn.FeatureAlphaDropout'. Remains active in
-    eval mode.
+    This class is an implementation of 'torch.nn.FeatureAlphaDropout' that remains active in eval mode.
+
+    This is used for Bayesian neural networks (BNN) via Monte Carlo dropout (MCD).
+
+    Parameters
+    ----------
+    p : float
+        The probability of an element to be zeroed. Defaults to 0.5.
+    inplace : bool
+        If set to 'True', will do this operation in-place. Defaults to 'False'.
     """
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Runs the forward pass.
+        Forward pass.
 
         Parameters
         ----------

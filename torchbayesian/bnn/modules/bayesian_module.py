@@ -3,13 +3,16 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     07/2025
-    @Last modification: 08/2025
+    @Last modification: 02/2026
 
-    @Description:       This file contains the 'BayesianModule' class which is a Torch 'nn.Module' container used to
-                        reparametrize the parameters of any torch model or module with some variational posterior.
+    @Description:       This file contains the 'BayesianModule' class, a Torch 'nn.Module' container used to
+                        reparametrize the parameters of any torch model or module with a variational posterior. The
+                        wrapped module or model is thus converted into a Bayesian neural network (BNN) via variational
+                        inference (VI) through Bayes by Backprop (BBB).
 """
 
 from typing import (
+    Any,
     Dict,
     Optional,
     Tuple
@@ -37,68 +40,120 @@ __all__ = ["BayesianModule"]
 
 class BayesianModule(Module):
     """
-    This class is a Torch 'nn.Module' container used to reparametrize the parameters of any torch model or module with
-    some variational posterior like for Bayes-by-Backprop approximate variational inference as in the paper "Weight
-    Uncertainty in Neural Networks" by Blundell et al.
+    This class is a Torch 'nn.Module' container that reparametrizes in-place the 'nn.Parameter' parameters of any torch
+    model or module with a variational posterior, and allows computation of the KL divergence.
 
-    Should be called before weights are registered to optimizer, otherwise, manually register the new variational
-    parameters to the optimizer.
+    The wrapped modules are thus converted into a Bayesian neural network (BNN) via variational inference (VI) through
+    Bayes by Backprop (BBB), as described in "Weight Uncertainty in Neural Networks" by Blundell et al.
+
+    After construction, 'module' original parameters are no longer optimizable 'nn.Parameter'; instead, the trainable
+    'nn.Parameter' weights live inside the injected reparametrizations.
+
+    Parameters
+    ----------
+    module: Module
+        The module or model to turn into a Bayesian neural network (BNN). Its parameters will be reparameterized
+        in-place.
+    variational_posterior : Optional[str | Tuple[str, Dict[str, Any]]]
+        The variational posterior distribution for the parameters. Either the name (str) of the variational posterior or
+        a tuple of its name and keyword arguments. Defaults to 'GaussianPosterior'.
+    prior : Optional[str | Tuple[str, Dict[str, Any]]]
+        The prior distribution for the parameters. Either the name (str) of the prior or a tuple of its name and
+        keyword arguments. Defaults to 'GaussianPrior' with zero mean and unit standard deviation.
+    dtype: Optional[_dtype]
+        The dtype on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
+        order to track the device and dtype of the module's parameters through internal calls to '_apply' so that the KL
+        accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default dtype.
+        It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
+    device: Optional[Device]
+        The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
+        order to track the device and dtype of the module's parameters through internal calls to _apply so that the KL
+        accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default device.
+        It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
+    debug : bool
+        Whether to print debug messages. Defaults to False.
+
+    Attributes
+    ----------
+    module : nn.Module
+        The reparameterized module or model.
 
     Notes
     -----
-    By default, a gaussian variational posterior distribution and a gaussian prior distribution are used. This allows
-    to evaluate KL divergence between the two in analytical form and is somewhat of a standard for BBB variational
-    inference, even though the original paper proposes a scale mixture of gaussians as prior.
+    By default, a Gaussian variational posterior distribution and a Gaussian prior distribution are used. This allows
+    an analytical evaluation of the KL divergence and is a common standard in BBB VI, even though the original paper
+    proposes a scale mixture of Gaussians as the prior.
 
-    If one wants to use custom variational posteriors and priors, simply register a factory function for the custom
-    posterior or prior to the factories 'PosteriorFactory' or 'PriorFactory', as detailed in the docs of 'Factory' in
-    file 'torchbayesian.bnn.utils.factories.factory.py'.
+    Custom variational posteriors and priors can be used by registering a factory function to 'PosteriorFactory' or
+    'PriorFactory', as described in the docs of 'Factory' in 'torchbayesian.bnn.utils.factories'.
+
+    Warning
+    -------
+    This should be applied before registering model parameters to an optimizer. Otherwise, the new variational
+    parameters must be manually registered to the optimizer.
     """
+
+    module: Module
+    _prior: str | Tuple[str, Dict[str, Any]]
+    _kl_meta: Tensor
 
     def __init__(
             self,
             module: Module,
-            variational_posterior: Optional[str | Tuple[str, Dict]] = None,
-            prior: Optional[str | Tuple[str, Dict]] = None,
+            variational_posterior: Optional[str | Tuple[str, Dict[str, Any]]] = None,
+            prior: Optional[str | Tuple[str, Dict[str, Any]]] = None,
             *,
             dtype: Optional[_dtype] = None,
             device: Optional[Device] = None,
             debug: bool = False
     ) -> None:
         """
-        Makes the module a bayesian neural network with a variational distribution over each parameter.
+        Turns a module or model into a Bayesian neural network (BNN).
 
-        Reparametrizes the parameters of any torch model or module with some variational posterior like for
-        Bayes-by-Backprop approximate variational inference as in the paper "Weight Uncertainty in Neural Networks" by
-        Blundell et al.
+        Reparametrizes in-place all the 'nn.Parameter' parameters of 'module' with variational posteriors, thus
+        converting 'module' into a Bayesian neural network (BNN) via variational inference (VI) through Bayes by
+        Backprop (BBB), as described in "Weight Uncertainty in Neural Networks" by Blundell et al.
+
+        After construction, 'module' original parameters are no longer optimizable 'nn.Parameter'; instead, the
+        trainable 'nn.Parameter' weights live inside the injected reparametrizations.
 
         Parameters
         ----------
         module: Module
-            The module to make bayesian.
-        variational_posterior : Optional[str | Tuple[str, Dict]]
+            The module or model to turn into a Bayesian neural network (BNN). Its parameters will be reparameterized
+            in-place.
+        variational_posterior : Optional[str | Tuple[str, Dict[str, Any]]]
             The variational posterior distribution for the parameters. Either the name (str) of the variational
             posterior or a tuple of its name and keyword arguments. Defaults to 'GaussianPosterior'.
-        prior : Optional[str | Tuple[str, Dict]]
+        prior : Optional[str | Tuple[str, Dict[str, Any]]]
             The prior distribution for the parameters. Either the name (str) of the prior or a tuple of its name and
-            keyword arguments. Defaults to 'GaussianPrior' with 0 mean and unit standard deviation.
+            keyword arguments. Defaults to 'GaussianPrior' with zero mean and unit standard deviation.
         dtype: Optional[_dtype]
             The dtype on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
-            order to track the device and dtype of the module's parameters through calls to '_apply' so that the KL
-            accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
-            dtype. Recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument.
+            order to track the device and dtype of the module's parameters through internal calls to '_apply' so that
+            the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch
+            default dtype. It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
         device: Optional[Device]
             The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized
-            in order to track the device and dtype of the module's parameters through calls to _apply so that the KL
-            accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default
-            device. Recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument.
+            in order to track the device and dtype of the module's parameters through internal calls to _apply so that
+            the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch
+            default device. It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
         debug : bool
             Whether to print debug messages. Defaults to False.
 
+        Warning
+        -------
+        This class should be constructed before registering the model parameters to an optimizer. Otherwise, the new
+        variational parameters must be manually registered to the optimizer.
+
         Notes
         -----
-        By default, GaussianPosterior and GaussianPrior are used as the variational posterior distribution and the prior
-        distribution for the parameters. This allows simple close form evaluation of the KL divergence between the two.
+        By default, a Gaussian variational posterior distribution and a Gaussian prior distribution are used. This
+        allows an analytical evaluation of the KL divergence and is a common standard in BBB VI, even though the
+        original paper proposes a scale mixture of Gaussians as the prior.
+
+        Custom variational posteriors and priors can be used by registering a factory function to 'PosteriorFactory' or
+        'PriorFactory', as described in the docs of 'Factory' in 'torchbayesian.bnn.utils.factories.factory'.
         """
         super().__init__()
 
@@ -107,7 +162,7 @@ class BayesianModule(Module):
         if prior is None:
             prior = ("NORMAL", {"mu": 0., "sigma": 1.})     # Defaults to GaussianPrior with mu = 0 and sigma = 1
 
-        original_training_flag = module.training    # Register training flag of orginal module
+        original_training_flag = module.training    # Register training flag of original module
 
         # Replace every parameter in the model by an instance of the variational posterior
         for name, param in list(module.named_parameters()):
@@ -139,7 +194,7 @@ class BayesianModule(Module):
 
     def forward(self, input: Tensor) -> Tensor:
         """
-        Forward pass of the BNN.
+        Forward pass of the module.
 
         Parameters
         ----------
@@ -195,9 +250,9 @@ class BayesianModule(Module):
             approx_num_samples: Optional[int] = None
     ) -> Tensor:
         """
-        Gets the elementwise KL divergence KL(posterior || prior) of a parameter from the 'BayesianModule'.
+        Computes the elementwise KL divergence KL(posterior || prior) of a parameter from the 'BayesianModule'.
 
-        If analytical solution is not defined, defaults to MC approximation of the KL divergence by sampling from the
+        If analytical solution is not defined, falls back to MC approximation of the KL divergence by sampling from the
         posterior and prior.
 
         Parameters
@@ -220,8 +275,8 @@ class BayesianModule(Module):
         ValueError
             If no analytical solution is implemented and 'approx_num_samples' is None.
 
-        Warnings
-        --------
+        Warns
+        -----
         UserWarning
             If MC approximation of the KL divergence is used but there is an analytical solution available.
         """
@@ -230,7 +285,7 @@ class BayesianModule(Module):
             # Warn user if he is still using MC approximation of the KL divergence
             if approx_num_samples is not None:
                 warnings.warn(
-                    f"You are using a Monte-Carlo approximation of the KL div, but an analytical solution is "
+                    f"You are using a Monte Carlo approximation of the KL div, but an analytical solution is "
                     f"implemented for distributions {type(variational_posterior)} and {type(prior)}. It is recommended "
                     f"that you set 'approx_num_samples' to None and use the default analytical solution instead.",
                     UserWarning
@@ -262,15 +317,6 @@ class BayesianModule(Module):
         If analytical solution is not defined between the two distributions, MC approximation of the KL divergence can
         be used.
 
-        Warning !
-        ---------
-        KL divergence is computed using an accumulator in order to avoid the overhead with using a list of KL terms, but
-        the accumulator must be on appropriate device which is why 'BayesianModule' tracks the buffer '_kl_meta'.
-        As such, if 'BayesianModule' is not initialized on same device as the original module, and if no move to
-        appropriate dtype/device is done afterward (e.g. using 'net.to(...)' or 'net.cuda()'), then the accumulator's
-        dtype/device might not fit with KL divergence terms coming from the parameters. This is easily fixable
-        by calling .to(...) to move all parameters and buffers of the 'BayesianModule' to the same dtype/device.
-
         Parameters
         ----------
         reduction : str
@@ -292,6 +338,18 @@ class BayesianModule(Module):
         ------
         ValueError
             If reduction type is invalid.
+
+        Warning
+        -------
+        KL divergence is computed using an accumulator in order to avoid the overhead with using a list of KL terms, but
+        the accumulator must be on appropriate device which is why 'BayesianModule' tracks the buffer '_kl_meta'.
+        As such, if 'BayesianModule' is not initialized on same device as the original module, and if no move to
+        appropriate dtype/device is done afterward (e.g. using 'net.to(...)' or 'net.cuda()'), then the accumulator's
+        dtype/device might not fit with KL divergence terms coming from the parameters. This is easily fixable
+        by calling .to(...) to move all parameters and buffers of the 'BayesianModule' to the same dtype/device.
+
+        TODO -- Currently, this feature may not work for distributions where factorization is not possible
+                Element-wise 1d KL -> Sum (or mean) breaks down.
         """
         reduction = reduction.lower()
 

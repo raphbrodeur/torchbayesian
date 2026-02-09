@@ -3,15 +3,16 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 01/2025
+    @Last modification: 02/2026
 
     @Description:       This file contains the prior factory 'PriorFactory' which is used to get 'Prior' classes from
-                        the prior factory 'PriorFactory', and the function 'get_prior' which is used by
+                        the prior factory 'PriorFactory', and the function 'get_prior()' which is used by
                         'bnn.BayesianModule' to get and instantiate 'Prior' classes registered to 'PriorFactory' given
                         the parameter shape and the prior's name and optional keyword arguments.
 """
 
 from typing import (
+    Any,
     Dict,
     Optional,
     Tuple,
@@ -48,7 +49,7 @@ def normal_prior_factory() -> Type[GaussianPrior]:
 # Create a 'Prior' instantiation function
 def get_prior(
         shape: _size,
-        prior: str | Tuple[str, Dict],
+        prior: str | Tuple[str, Dict[str, Any]],
         *,
         dtype: Optional[_dtype] = None,
         device: Optional[Device] = None
@@ -59,13 +60,12 @@ def get_prior(
     Parameters
     ----------
     shape : _size
-        The shape of the parameter or tensor for which to initialize a prior.
-    prior : str | Tuple[str, Dict]
-        The prior to instantiate. Either the prior's name (str) or a tuple of the name and a
-        dictionary of keyword arguments for instantiation.
+        The shape of the tensor for which to initialize a prior.
+    prior : str | Tuple[str, Dict[str, Any]]
+        The prior to instantiate. Either the prior's name (str) or a tuple of the name and a dictionary of keyword
+        arguments for instantiation.
     dtype : Optional[_dtype]
-        The shape of the parameter or tensor for which to initialize a prior. Optional. Defaults to torch's default
-        dtype.
+        The dtype of the tensor for which to initialize a prior. Optional. Defaults to torch's default dtype.
     device : Optional[Device]
         The device of the parameter or tensor for which to initialize a prior. Optional. Defaults to torch's default
         device.

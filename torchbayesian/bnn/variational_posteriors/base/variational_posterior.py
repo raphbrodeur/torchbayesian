@@ -3,10 +3,10 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     07/2025
-    @Last modification: 08/2025
+    @Last modification: 02/2026
 
     @Description:       This file contains the 'VariationalPosterior' base class for all variational posteriors used for
-                        Bayes-by-backprop variational inference.
+                        Bayes by Backprop (BBB) variational inference (VI).
 """
 
 from abc import ABC, abstractmethod
@@ -28,18 +28,37 @@ __all__ = ["VariationalPosterior"]
 
 class VariationalPosterior(Module, ABC):
     """
-    This class serves as a base class for all variational posteriors used for Bayes-by-backprop variational inference.
+    This class serves as a base class for all variational posteriors used for Bayes by Backprop (BBB) variational
+    inference (VI).
+
+    Parameters
+    ----------
+    shape : _size
+        The shape of the parameter replaced by the variational posterior.
+    dtype : Optional[_dtype]
+        The dtype of the parameter replaced by the variational posterior. Optional. Defaults to torch's default dtype.
+    device : Optional[Device]
+        The device of the parameter replaced by the variational posterior. Optional. Defaults to torch's default device.
+
+    Attributes
+    ----------
+    shape : _size
+        The shape of the tensors sampled from the variational posterior.
 
     Notes
     -----
     Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; their constructor ('__init__') method
-    must accept arguments 'shape' : _size, 'dtype' : Optional[_dtype] and 'device' : Optional[Device] !!
+    must accept arguments 'shape', 'dtype' and 'device'.
 
-    In the constructor '__init__' method of a custom subclass of 'VariationalPosterior' :
+    Recommended PyTorch-esque pattern for the constructor ('__init__' method) of custom subclasses of
+    'VariationalPosterior':
     (1) Call  'super().__init__(...)' then;
     (2) Create empty variational parameters with appropriate size. e.g. 'self.mu = nn.Parameter(torch.empty(...))' then;
-    (3) Call 'self.reset_parameters()' at the end of '__init__' to initialize the variational parameters.
+    (3) Call a method 'self.reset_parameters()' at the end of '__init__' to initialize the variational parameters.
     """
+
+    shape: _size
+    _posterior_meta: Tensor
 
     def __init__(
             self,
@@ -49,17 +68,22 @@ class VariationalPosterior(Module, ABC):
             device: Optional[Device] = None,
     ) -> None:
         """
-        Initialize the variational posterior. Tracks the supposed attributes of the replaced parameter through calls to
-        '_apply' like '.to()', '.cuda()', etc... This is used to instantiate priors fitting the variational posterior.
+        Initializes the variational posterior.
+
+        Tracks the supposed attributes of the replaced parameter through calls to '_apply' (e.g. '.to(dtype)',
+        '.cuda()', etc.) with a dummy buffer '_posterior_meta'. This is used to instantiate priors fitting the
+        variational posterior.
 
         Parameters
         ----------
         shape : _size
             The shape of the parameter replaced by the variational posterior.
         dtype : Optional[_dtype]
-            The dtype of the parameter replaced by the variational posterior. Defaults to torch's default dtype.
+            The dtype of the parameter replaced by the variational posterior. Optional. Defaults to torch's default
+            dtype.
         device : Optional[Device]
-            The device of the parameter replaced by the variational posterior. Defaults to torch's default device.
+            The device of the parameter replaced by the variational posterior. Optional. Defaults to torch's default
+            device.
         """
         super().__init__()
 
@@ -91,13 +115,6 @@ class VariationalPosterior(Module, ABC):
         The replaced parameter's supposed device.
         """
         return self._posterior_meta.device
-
-    @abstractmethod
-    def reset_parameters(self) -> None:
-        """
-        Initializes the variational parameters.
-        """
-        raise NotImplementedError
 
     @property
     @abstractmethod
