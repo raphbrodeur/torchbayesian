@@ -75,12 +75,7 @@ def get_posterior(param: Tensor, posterior: str | Tuple[str, Dict[str, Any]]) ->
         posterior_name, posterior_kwargs = posterior
 
     posterior_type = PosteriorFactory[posterior_name]   # Get appropriate posterior class using factory
-    posterior_instance = posterior_type(                # Instantiate said posterior class
-        shape=param.shape,
-        dtype=param.dtype,
-        device=param.device,
-        **posterior_kwargs
-    )
+    posterior_instance = posterior_type.from_param(param=param, **posterior_kwargs)   # Instantiate said posterior class
 
     return posterior_instance
 

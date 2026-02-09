@@ -10,7 +10,11 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import (
+    Optional,
+    Type,
+    TypeVar
+)
 
 import torch
 from torch import Tensor
@@ -24,6 +28,9 @@ from torch.types import (
 
 
 __all__ = ["VariationalPosterior"]
+
+
+T = TypeVar("T", bound="VariationalPosterior")  # PEP 673 style 'Self' type for class methods constructors
 
 
 class VariationalPosterior(Module, ABC):
@@ -47,8 +54,7 @@ class VariationalPosterior(Module, ABC):
 
     Notes
     -----
-    Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; their constructor ('__init__') method
-    must accept arguments 'shape', 'dtype' and 'device'.
+    Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; see 'from_param' constructor classmethod.
 
     Recommended PyTorch-esque pattern for the constructor ('__init__' method) of custom subclasses of
     'VariationalPosterior':
@@ -101,6 +107,31 @@ class VariationalPosterior(Module, ABC):
         # TODO -- Would this be more efficient ? Perhaps if the number of VariationalPosterior's is quite large...
         self.shape = shape
         self.register_buffer("_posterior_meta", torch.empty(0, dtype=dtype, device=device), persistent=False)
+
+    @classmethod
+    def from_param(cls: Type[T], param: Tensor, **kwargs) -> T:
+        """
+        Alternate constructor used by the 'bnn.BayesianModule' factory logic.
+
+        Instantiates a variational posterior given the parameter to be replaced. This construction path is used by
+        'get_posterior' inside 'bnn.BayesianModule'.
+
+        The default implementation constructs the posterior using only the parameter's shape, dtype and device.
+        Subclasses of 'VariationalPosterior' that require further access to 'param' should override this method.
+
+        Parameters
+        ----------
+        param : Tensor
+            The tensor (parameter or buffer) being replaced by a variational posterior.
+        **kwargs
+            Additional keyword arguments passed along to the variational posterior constructor.
+
+        Returns
+        -------
+        posterior_instance : Self
+            An instance of the variational posterior class.
+        """
+        return cls(shape=param.shape, dtype=param.dtype, device=param.device, **kwargs)     # type: ignore[arg-type]
 
     @property
     def dtype(self) -> _dtype:
