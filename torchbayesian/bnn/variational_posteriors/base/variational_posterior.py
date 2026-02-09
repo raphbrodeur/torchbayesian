@@ -54,7 +54,7 @@ class VariationalPosterior(Module, ABC):
 
     Notes
     -----
-    Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; see 'from_param' constructor classmethod.
+    Subclasses used in 'bnn.BayesianModule' must work with 'get_posterior()'; see 'from_param' constructor class method.
 
     Recommended PyTorch-esque pattern for the constructor ('__init__' method) of custom subclasses of
     'VariationalPosterior':
