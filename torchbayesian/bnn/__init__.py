@@ -14,6 +14,8 @@ from torchbayesian.bnn.priors import (
 )
 from torchbayesian.bnn.variational_posteriors import (
     GaussianPosterior,
+    PretrainedGaussianPosterior,
+    PretrainedNormalPosterior,
     NormalPosterior,
     VariationalPosterior
 )

@@ -3,7 +3,7 @@
     @Author:            Raphael Brodeur, PyTorch
 
     @Creation Date:     07/2025
-    @Last modification: 01/2026
+    @Last modification: 02/2026
 
     @Description:       This file contains the 'register_reparametrization()' function which is used to replace a Torch
                         parameter or buffer by a variational posterior 'nn.Module' from which the parameter or buffer is
@@ -13,6 +13,7 @@
 """
 
 from copy import deepcopy
+import copyreg
 from typing import (
     Dict,
     Optional,
@@ -21,11 +22,7 @@ from typing import (
 
 import torch
 from torch import Tensor
-from torch.nn import (
-    Module,
-    ModuleDict,
-    Parameter
-)
+from torch.nn import Module, ModuleDict
 
 
 __all__ = ["register_reparametrization"]
@@ -37,34 +34,51 @@ _cache: Dict[Tuple[int, str], Optional[Tensor]] = {}
 
 class Reparametrization(Module):
     """
-    This class wraps the parametrization and handles safety checks for the replacement by the variational posterior and
-    its forward call.
+    This class wraps the variational posterior module and handles safety checks for the replacement of the parameter or
+    buffer by the variational posterior and its forward call.
 
     It is the type of 'module.reparametrizations[tensor_name]' when 'module[tensor_name]' has been reparametrized with
-    'register_parametrization()'.
+    'register_reparametrization()'.
+
+    Parameters
+    ----------
+    parametrization : Module
+        The parametrization function; the variational posterior in the context of Bayes by Backprop.
+    original : Tensor
+        The tensor that is being reparametrized.
+    unsafe : bool
+        Whether to bypass correctness checks. Optional. Defaults to False.
+
+    Attributes
+    ----------
+    variational_posterior : Module
+        The parametrization replacing 'original'.
 
     Notes
     -----
-    This class is used internally by 'register_parametrization()'. It shall not be instantiated by the user.
+    This class is used internally by 'register_reparametrization()'. It shall not be instantiated by the user.
     """
+
+    variational_posterior: Module
 
     def __init__(
             self,
             parametrization: Module,
-            original: Parameter | Tensor,
+            original: Tensor,
+            *,
             unsafe: bool = False
     ) -> None:
         """
-        Wraps a reparametrization and checks if the parametrization function fits with original tensor.
+        Wraps a stochastic reparametrization and checks if the 'parametrization' function fits with original tensor.
 
         Parameters
         ----------
         parametrization : Module
-            The parametrization function; the variational posterior in the context of Bayes-by-backprop.
-        original : Parameter | Tensor
+            The stochastic reparametrization function; the variational posterior in the context of Bayes by Backprop.
+        original : Tensor
             The tensor that is being reparametrized.
         unsafe : bool
-            Whether to bypass correctness checks. Defaults to False.
+            Whether to bypass correctness checks. Optional. Defaults to False.
 
         Raises
         ------
@@ -105,11 +119,13 @@ class Reparametrization(Module):
                     f"Reparametrization returns shape: {new.shape}"
                 )
 
-        self.variational_posterior: Module = parametrization
+        self.variational_posterior = parametrization
 
     def forward(self) -> Tensor:
         """
         Wraps the parametrization's forward call. Checks for scripting.
+
+        In the context of Bayes by Backprop, this returns a sample from the variational posterior.
         """
         if torch.jit.is_scripting():
             raise RuntimeError("Reparametrization is not working with scripting.")
@@ -146,24 +162,51 @@ class Reparametrization(Module):
 def register_reparametrization(
     module: Module,
     tensor_name: str,
-    parametrization: Module
+    parametrization: Module,
+    *,
+    unsafe: bool = False
 ) -> Module:
     """
-    Registers a reparametrization to a tensor (parameter or buffer) in a module.
+    Replaces a tensor (parameter or buffer) in a module by registering a stochastic reparametrization module in its
+    place.
 
-    Assume that tensor_name="weight" for simplicity. When accessing module.weight, the module will return the
-    parametrized version parametrization(module.weight). If the original tensor requires a gradient, the backward pass
-    will differentiate through attribute parametrization and the optimizer will update the tensor accordingly. The
-    parameters or buffers of the parametrization are registered to the model and state_dict.
+    Assume that 'tensor_name="weight"' for simplicity. After reparametrization, the original tensor 'module.weight' is
+    removed and replaced by a Python property. Accessing 'module.weight' now calls a corresponding 'Reparametrization'
+    module which returns a tensor returned by calling 'parametrization()' (typically, that is a tensor sampled from the
+    variational posterior), rather than using the original tensor.
+
+    If the original tensor requires a gradient, the backward pass differentiates through the reparametrization module
+    and the optimizer updates the variational parameters of the reparametrization module instead of the original
+    parameter. The parameters and buffers of 'parametrization' are registered to the model and state_dict, and the
+    original tensor is removed from state_dict.
+
+    Parameters
+    ----------
+    module : Module
+        The module whose tensor is to be reparametrized.
+    tensor_name : str
+        The name of the parameter or buffer to reparametrize.
+    parametrization : Module
+        The module with which to replace the tensor. Typically, this is the variational posterior.
+    unsafe : bool
+        Whether to bypass correctness checks. Optional. Defaults to False.
+
+    Returns
+    -------
+    module : Module
+        The module, reparametrized in-place.
 
     Examples
     --------
         mod = nn.Linear(2, 4)
-        # This module has parameters "mod.bias" and "mod.weight"
+        # This module has parameters 'mod.bias' and 'mod.weight'
 
-        register_reparametrization(mod, "weight", bnn.GaussianPosterior)
-        # The module "mod" now has parameters "mod.bias", "mod.reparametrizations.weight.GaussianPosterior.mu"
-        # and "mod.reparametrizations.weight.GaussianPosterior.rho"
+        # We replace the parameter 'mod.weight' by a Gaussian variational posterior with learnable parameters
+        # corresponding to the mean and standard deviation :
+        register_reparametrization(mod, "weight", bnn.GaussianPosterior(...))
+
+        # The module 'mod' now has parameters 'mod.bias', 'mod.reparametrizations.weight.variational_posterior.mu'
+        # and 'mod.reparametrizations.weight.variational_posterior.rho'
     """
     parametrization.train(module.training)  # Put parametrization in same training mode as module
 
@@ -173,7 +216,7 @@ def register_reparametrization(
         original = getattr(module, tensor_name)
 
         # Wrap the parametrization with Reparametrization to check for errors
-        reparametrization = Reparametrization(parametrization, original)
+        reparametrization = Reparametrization(parametrization, original, unsafe=unsafe)
 
         # Delete the previous parameter or buffer that is now reparametrized
         delattr(module, tensor_name)
@@ -318,7 +361,7 @@ def _inject_property(module: Module, tensor_name: str) -> None:
         The name of the property to create.
     """
     # We check if an attribute already exists under that name
-    # This should never fire if register_parametrization is correctly implemented.
+    # This should never fire if 'register_reparametrization' is correctly implemented.
     # (We already 'delattr(module, tensor_name)' in 'register_reparametrization',
     # this ensures we are not overwriting some attribute)
     assert not hasattr(module, tensor_name)
@@ -369,8 +412,8 @@ def _inject_property(module: Module, tensor_name: str) -> None:
 
         raise RuntimeError(
             f"Cannot assign to '{tensor_name}' because it is reparametrized. "
-            f"Access the reparametrization's attributes (e.g. parameters) via 'module.reparametrizations["
-            f"'{tensor_name}'].variational_posterior."
+            f"Access the reparametrization's attributes (e.g. parameters) via "
+            f"'module.reparametrizations['{tensor_name}'].variational_posterior'."
         )
 
     # Inject the property with the specified getter and setter functions

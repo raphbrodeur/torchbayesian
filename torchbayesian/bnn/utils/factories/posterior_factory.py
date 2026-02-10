@@ -3,26 +3,30 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     08/2025
-    @Last modification: 01/2025
+    @Last modification: 02/2026
 
     @Description:       This file contains the variational factory 'PosteriorFactory' which is used to get
                         'VariationalPosterior' classes from the variational posterior factory 'PosteriorFactory', and
-                        the function 'get_posterior' which is used by 'bnn.BayesianModule' to get and instantiate
+                        the function 'get_posterior()' which is used by 'bnn.BayesianModule' to get and instantiate
                         'VariationalPosterior' classes registered to 'PosteriorFactory' given the parameter to replace
                         and the variational posterior's name and optional keyword arguments.
 """
 
 from typing import (
+    Any,
     Dict,
     Tuple,
     Type
 )
 
 from torch import Tensor
-from torch.nn import Parameter
 
 from torchbayesian.bnn.utils.factories.factory import Factory
-from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
+from torchbayesian.bnn.variational_posteriors import (
+    GaussianPosterior,
+    PretrainedGaussianPosterior,
+    VariationalPosterior
+)
 
 
 __all__ = [
@@ -47,19 +51,29 @@ def normal_posterior_factory() -> Type[GaussianPosterior]:
     return GaussianPosterior
 
 
+@PosteriorFactory.register_factory_function("pretrained_gaussian")
+def pretrained_gaussian_posterior_factory() -> Type[PretrainedGaussianPosterior]:
+    return PretrainedGaussianPosterior
+
+
+@PosteriorFactory.register_factory_function("pretrained_normal")
+def pretrained_normal_posterior_factory() -> Type[PretrainedGaussianPosterior]:
+    return PretrainedGaussianPosterior
+
+
 VariationalPosteriorFactory = PosteriorFactory
 
 
 # Create a 'VariationalPosterior' instantiation function
-def get_posterior(param: Parameter | Tensor, posterior: str | Tuple[str, Dict]) -> VariationalPosterior:
+def get_posterior(param: Tensor, posterior: str | Tuple[str, Dict[str, Any]]) -> VariationalPosterior:
     """
     Creates an instance of a 'VariationalPosterior' subclass to replace a given tensor. For use in 'bnn.BayesianModule'.
 
     Parameters
     ----------
-    param : Parameter | Tensor
-        The parameter or tensor for which to initialize a variational posterior.
-    posterior : str | Tuple[str, Dict]
+    param : Tensor
+        The tensor for which to initialize a variational posterior.
+    posterior : str | Tuple[str, Dict[str, Any]]
         The variational posterior to instantiate. Either the posterior's name (str) or a tuple of the name and a
         dictionary of keyword arguments for instantiation.
 
@@ -75,12 +89,7 @@ def get_posterior(param: Parameter | Tensor, posterior: str | Tuple[str, Dict]) 
         posterior_name, posterior_kwargs = posterior
 
     posterior_type = PosteriorFactory[posterior_name]   # Get appropriate posterior class using factory
-    posterior_instance = posterior_type(                # Instantiate said posterior class
-        shape=param.shape,
-        dtype=param.dtype,
-        device=param.device,
-        **posterior_kwargs
-    )
+    posterior_instance = posterior_type.from_param(param=param, **posterior_kwargs)   # Instantiate said posterior class
 
     return posterior_instance
 
