@@ -111,10 +111,9 @@ class VariationalPosterior(Module, ABC):
     @classmethod
     def from_param(cls: Type[T], param: Tensor, **kwargs) -> T:
         """
-        Alternate constructor used by the 'bnn.BayesianModule' factory logic.
+        Alternate constructor used by 'get_posterior' inside 'bnn.BayesianModule'.
 
-        Instantiates a variational posterior given the parameter to be replaced. This construction path is used by
-        'get_posterior' inside 'bnn.BayesianModule'.
+        Instantiates a variational posterior given the parameter to be replaced.
 
         The default implementation constructs the posterior using only the parameter's shape, dtype and device.
         Subclasses of 'VariationalPosterior' that require further access to 'param' should override this method.
