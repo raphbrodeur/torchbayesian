@@ -65,7 +65,7 @@ class BayesianModule(Module):
         order to track the device and dtype of the module's parameters through internal calls to '_apply' so that the KL
         accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default dtype.
         It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
-    device: Optional[Device]
+    device: Device
         The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
         order to track the device and dtype of the module's parameters through internal calls to _apply so that the KL
         accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default device.
@@ -104,7 +104,7 @@ class BayesianModule(Module):
             prior: Optional[str | Tuple[str, Dict[str, Any]]] = None,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None,
+            device: Device = None,
             debug: bool = False
     ) -> None:
         """
@@ -133,7 +133,7 @@ class BayesianModule(Module):
             order to track the device and dtype of the module's parameters through internal calls to '_apply' so that
             the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch
             default dtype. It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
-        device: Optional[Device]
+        device: Device
             The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized
             in order to track the device and dtype of the module's parameters through internal calls to _apply so that
             the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch

@@ -45,7 +45,7 @@ class GaussianPosterior(VariationalPosterior):
     dtype : Optional[_dtype]
         The dtype of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
         dtype.
-    device : Optional[Device]
+    device : Device
         The device of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
         device.
 
@@ -65,7 +65,7 @@ class GaussianPosterior(VariationalPosterior):
             shape: _size,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None
+            device: Device = None
     ) -> None:
         """
         Initializes a diagonal Gaussian variational posterior.
@@ -77,7 +77,7 @@ class GaussianPosterior(VariationalPosterior):
         dtype : Optional[_dtype]
             The dtype of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
             dtype.
-        device : Optional[Device]
+        device : Device
             The device of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
             device.
         """

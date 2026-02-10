@@ -44,7 +44,7 @@ class VariationalPosterior(Module, ABC):
         The shape of the parameter replaced by the variational posterior.
     dtype : Optional[_dtype]
         The dtype of the parameter replaced by the variational posterior. Optional. Defaults to torch's default dtype.
-    device : Optional[Device]
+    device : Device
         The device of the parameter replaced by the variational posterior. Optional. Defaults to torch's default device.
 
     Attributes
@@ -71,7 +71,7 @@ class VariationalPosterior(Module, ABC):
             shape: _size,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None,
+            device: Device = None,
     ) -> None:
         """
         Initializes the variational posterior.
@@ -87,7 +87,7 @@ class VariationalPosterior(Module, ABC):
         dtype : Optional[_dtype]
             The dtype of the parameter replaced by the variational posterior. Optional. Defaults to torch's default
             dtype.
-        device : Optional[Device]
+        device : Device
             The device of the parameter replaced by the variational posterior. Optional. Defaults to torch's default
             device.
         """

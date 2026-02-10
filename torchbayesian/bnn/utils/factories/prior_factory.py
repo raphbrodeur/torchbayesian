@@ -52,7 +52,7 @@ def get_prior(
         prior: str | Tuple[str, Dict[str, Any]],
         *,
         dtype: Optional[_dtype] = None,
-        device: Optional[Device] = None
+        device: Device = None
 ) -> Prior:
     """
     Creates an instance of a 'Prior' subclass. For use in 'bnn.BayesianModule'.
@@ -66,7 +66,7 @@ def get_prior(
         arguments for instantiation.
     dtype : Optional[_dtype]
         The dtype of the tensor for which to initialize a prior. Optional. Defaults to torch's default dtype.
-    device : Optional[Device]
+    device : Device
         The device of the parameter or tensor for which to initialize a prior. Optional. Defaults to torch's default
         device.
 
