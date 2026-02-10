@@ -76,6 +76,11 @@ class Factory:
         object_class : Any
             The object class. That is, not an instance of the object but its actual class. e.g. returns the class
             nn.Conv3d, not an instance nn.Conv3d().
+
+        Raises
+        ------
+        KeyError
+            If an unknown factory name is given.
         """
         # If 'args' is a factory name
         if isinstance(args, str):
@@ -86,8 +91,17 @@ class Factory:
         else:
             factory_name, *args = args  # Remaining elements of 'args' are unpacked with * into the new list 'args'
 
-        factory_function = self._factories[factory_name.upper()]    # Gets the factory function
-        object_class = factory_function(*args)                      # Calls said factory function
+        # Get the factory function
+        try:
+            factory_function = self._factories[factory_name.upper()]
+        except KeyError as e:
+            raise KeyError(
+                f"Unknown factory name '{factory_name}'. "
+                f"Valid factory names are: {', '.join(self.factories)}."
+            ) from e
+
+        # Call said factory function
+        object_class = factory_function(*args)
 
         return object_class
 
