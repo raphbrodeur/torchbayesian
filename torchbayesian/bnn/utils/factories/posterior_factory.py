@@ -22,7 +22,11 @@ from typing import (
 from torch import Tensor
 
 from torchbayesian.bnn.utils.factories.factory import Factory
-from torchbayesian.bnn.variational_posteriors import GaussianPosterior, VariationalPosterior
+from torchbayesian.bnn.variational_posteriors import (
+    GaussianPosterior,
+    PretrainedGaussianPosterior,
+    VariationalPosterior
+)
 
 
 __all__ = [
@@ -45,6 +49,16 @@ def gaussian_posterior_factory() -> Type[GaussianPosterior]:
 @PosteriorFactory.register_factory_function("normal")
 def normal_posterior_factory() -> Type[GaussianPosterior]:
     return GaussianPosterior
+
+
+@PosteriorFactory.register_factory_function("pretrained_gaussian")
+def pretrained_gaussian_posterior_factory() -> Type[PretrainedGaussianPosterior]:
+    return PretrainedGaussianPosterior
+
+
+@PosteriorFactory.register_factory_function("pretrained_normal")
+def pretrained_normal_posterior_factory() -> Type[PretrainedGaussianPosterior]:
+    return PretrainedGaussianPosterior
 
 
 VariationalPosteriorFactory = PosteriorFactory
