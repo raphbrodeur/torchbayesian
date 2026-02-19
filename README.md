@@ -4,7 +4,7 @@
 
 <p align="center">
     <i>
-        Bayesian Neural Networks made easy.
+        The simplest way to build Bayesian Neural Networks in PyTorch.
     </i>
 </p>
 
