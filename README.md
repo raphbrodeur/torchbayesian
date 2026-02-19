@@ -2,7 +2,13 @@
     <img src="/docs/images/logo.png" width="100%" alt="torchbayesian-logo">
 </p>
 
-# torchbayesian — Bayesian Neural Networks made easy
+<p align="center">
+    <i>
+        Bayesian Neural Networks made easy.
+    </i>
+</p>
+
+# torchbayesian
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?logo=python)
 ![PyTorch](https://img.shields.io/badge/PyTorch-1.10+-orange?logo=pytorch)
