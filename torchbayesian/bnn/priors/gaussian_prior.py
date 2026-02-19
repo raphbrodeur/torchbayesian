@@ -107,7 +107,7 @@ class GaussianPrior(Prior):
             sigma = 1.
 
         # Assign attribute 'mu'
-        if isinstance(mu, float):
+        if isinstance(mu, (int, float)):
             self.mu = torch.full(shape, mu, dtype=dtype, device=device)
         elif isinstance(mu, Tensor):
             # Align dtype/device if specified; otherwise ('dtype'/'device' is None) keep 'mu' 's dtype/device
@@ -116,7 +116,7 @@ class GaussianPrior(Prior):
             raise TypeError(f"Argument 'mu' must be Optional[float | Tensor], {type(mu)} was provided.")
 
         # Assign attribute 'sigma'
-        if isinstance(sigma, float):
+        if isinstance(sigma, (int, float)):
             self.sigma = torch.full(shape, sigma, dtype=dtype, device=device)
         elif isinstance(sigma, Tensor):
             # Align dtype/device if specified; otherwise ('dtype'/'device' is None) keep 'sigma' 's dtype/device
