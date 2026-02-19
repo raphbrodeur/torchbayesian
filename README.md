@@ -21,7 +21,7 @@ Crucially,
 
 ...
 
-### Turn any PyTorch model into an Bayesian neural network with a single line of code
+### Quickly turn any PyTorch model into an Bayesian neural network
 
 Simply wrap any `nn.Module` model `bnn.BayesianModule` to make it a BNN :
 
