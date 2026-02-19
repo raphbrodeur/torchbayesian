@@ -25,7 +25,7 @@ import torch.distributions as D
 from torch.distributions import Distribution
 from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
-from torch.types import Device, _dtype
+from torch.types import Device
 
 from torchbayesian.bnn.utils import (
     get_posterior,
@@ -33,6 +33,7 @@ from torchbayesian.bnn.utils import (
     register_reparametrization
 )
 from torchbayesian.bnn.variational_posteriors import VariationalPosterior
+from torchbayesian.types import _dtype
 
 
 __all__ = ["BayesianModule"]

@@ -20,11 +20,9 @@ import torch
 from torch import Tensor
 from torch.distributions import Distribution
 from torch.nn import Module
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
+
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["VariationalPosterior"]

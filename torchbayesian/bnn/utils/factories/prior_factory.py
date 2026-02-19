@@ -19,14 +19,11 @@ from typing import (
     Type
 )
 
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
 
 from torchbayesian.bnn.priors import GaussianPrior, Prior
 from torchbayesian.bnn.utils.factories.factory import Factory
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["get_prior", "PriorFactory"]

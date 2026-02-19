@@ -17,13 +17,10 @@ from torch import Tensor
 from torch.distributions import Normal
 from torch.nn import Parameter
 import torch.nn.functional as F
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
 
 from torchbayesian.bnn.variational_posteriors.base import VariationalPosterior
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["GaussianPosterior", "NormalPosterior"]

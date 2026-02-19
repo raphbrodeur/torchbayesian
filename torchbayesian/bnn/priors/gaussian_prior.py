@@ -14,13 +14,10 @@ from typing import Optional
 import torch
 from torch import Tensor
 from torch.distributions import Distribution, Normal
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
 
 from torchbayesian.bnn.priors.base import Prior
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["GaussianPrior", "NormalPrior"]
