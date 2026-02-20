@@ -15,33 +15,24 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://static.pepy.tech/badge/torchbayesian)](https://pepy.tech/project/torchbayesian)
 
-torchbayesian is a [PyTorch](https://pytorch.org/)-based library for building uncertainty-aware neural networks.
+torchbayesian is a [PyTorch](https://pytorch.org/)-based, [open-source](https://github.com/raphbrodeur/torchbayesian/blob/main/LICENSE) library for building uncertainty-aware neural networks.
 It serves as a lightweight extension to PyTorch, providing support for Bayesian deep learning and principled uncertainty quantification of model predictions while preserving the standard PyTorch workflow.
 
-The package integrates seamlessly into the PyTorch ecosystem, enabling the conversion of existing models into Bayesian neural networks via Bayes-by-Backprop variational inference.
+The package integrates seamlessly into the [PyTorch Ecosystem](https://pytorch.org/ecosystem/), enabling the conversion of existing models into Bayesian neural networks via [Bayes-by-Backprop](https://arxiv.org/abs/1505.05424) variational inference.
 Its modular design supports configurable priors and variational posteriors, and also includes support for other uncertainty estimation methods such as Monte Carlo dropout.
 
 ### Quickly turn any PyTorch model into a Bayesian neural network
 
-Simply wrap any `nn.Module` model `bnn.BayesianModule` to make it a BNN :
-
-...
-
-**torchbayesian** is a lightweight [PyTorch](https://pytorch.org/) extension that lets you turn any PyTorch model into a **Bayesian Neural Network** (BNN) with just one line of code.
-It makes [Bayes-by-Backprop](https://arxiv.org/abs/1505.05424) and **variational inference** effortless and **compatible with any** `nn.Module`, without you having to rewrite your model using custom layers or change your usual PyTorch workflow.
-Its goal is to make **uncertainty-aware** and **Bayesian deep learning** as easy as working with any traditional neural network.
-
-### One line to transform any torch model into a BNN
-
-Simply wrap any `nn.Module` model `bnn.BayesianModule` to make it a BNN :
+Any `nn.Module` can be wrapped with the module container `bnn.BayesianModule` to make it a Bayesian neural network (BNN):
 
 ```python
-from torchbayesian.bnn import BayesianModule
+import torchbayesian.bnn as bnn
 
-net = BayesianModule(net)  # 'net' is now a BNN
+net = bnn.BayesianModule(net)
 ```
 
-The resulting model behaves exactly like any standard `nn.Module`, but instead of learning fixed weight values, your model now learns distributions from which weight values are sampled during training and inference, allowing it to capture uncertainty in its parameters and predictions.
+The resulting module remains a standard `nn.Module`, fully compatible with the PyTorch API.
+Internally, its parameters are reparameterized as variational distributions over the weights, enabling approximate Bayesian inference and uncertainty-aware predictions.
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/bnn_1d_regression.png" width="50%">
