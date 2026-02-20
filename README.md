@@ -16,12 +16,12 @@
 [![Downloads](https://static.pepy.tech/badge/torchbayesian)](https://pepy.tech/project/torchbayesian)
 
 torchbayesian is a [PyTorch](https://pytorch.org/)-based library for building uncertainty-aware neural networks.
-...
-Crucially,
+It serves as a lightweight extension to PyTorch, providing support for Bayesian deep learning and principled uncertainty quantification of model predictions while preserving the standard PyTorch workflow.
 
-...
+The package integrates seamlessly into the PyTorch ecosystem, enabling the conversion of existing models into Bayesian neural networks via Bayes-by-Backprop variational inference.
+Its modular design supports configurable priors and variational posteriors, and also includes support for other uncertainty estimation methods such as Monte Carlo dropout.
 
-### Quickly turn any PyTorch model into an Bayesian neural network
+### Quickly turn any PyTorch model into a Bayesian neural network
 
 Simply wrap any `nn.Module` model `bnn.BayesianModule` to make it a BNN :
 
