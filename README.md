@@ -38,7 +38,7 @@ Internally, its parameters are reparameterized as variational distributions over
     <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/bnn_1d_regression.png" width="50%">
 </p>
 
-## Key Features
+## Key features
 
 - **Deterministic-to-Bayesian conversion** — Convert any existing model into a Bayesian neural network with a single line of code.
 - **Compatible with any `nn.Module`** — Rather than replacing a few specific layers (e.g., `nn.Linear`, `nn.ConvNd`) with Bayesian counterparts, torchbayesian operates at the `nn.Parameter` level.
@@ -48,14 +48,13 @@ Internally, its parameters are reparameterized as variational distributions over
 - **PyTorch-native design** — Preserves existing workflows and is fully compatible with other PyTorch-based tools such as MONAI.
 - **Monte Carlo dropout support** — Includes dedicated layers and utilities for Monte Carlo dropout uncertainty estimation.
 
-
-## Requirements
+## Installation
 
 torchbayesian works with Python 3.10+ and has a direct dependency on [PyTorch](https://pytorch.org/get-started/locally/).
 
-## Installation
+#### Current release
 
-To install the current release, run :
+To install the [current release](https://pypi.org/project/torchbayesian/) with `pip`, run the following:
 
 ```bash
 pip install torchbayesian
@@ -63,25 +62,22 @@ pip install torchbayesian
 
 ## Getting started
 
-> This 	`README.md` is still a work in progress. Further details will be added.
+A complete [working example](https://github.com/raphbrodeur/torchbayesian/tree/main/examples/bnn_example.py) is available on GitHub.
 
-A working example is available at [torchbayesian/examples](https://github.com/raphbrodeur/torchbayesian/tree/main/examples).
+The model's [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Evidence_lower_bound) can be retrieved at any point via `.kl_divergence()` on a `bnn.BayesianModule` instance.
 
-The [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Evidence_lower_bound) of the model can be retrieved at any point using the `.kl_divergence()` method of `bnn.BayesianModule`.
+Different or custom [priors](https://github.com/raphbrodeur/torchbayesian/tree/main/torchbayesian/bnn/priors) and [variational posteriors](https://github.com/raphbrodeur/torchbayesian/tree/main/torchbayesian/bnn/variational_posteriors) can be used.
 
-Different priors and posteriors can be used.
+For Monte Carlo dropout, dropout layers can be activated during evaluation using the [`enable_mc_dropout()`](https://github.com/raphbrodeur/torchbayesian/tree/main/torchbayesian/bnn/utils/enable_mc_dropout.py) utility.
+Dedicated [Bayesian dropout layers](https://github.com/raphbrodeur/torchbayesian/tree/main/torchbayesian/bnn/modules/dropout.py) are also provided.
 
 ## Motivation
 
-Modern deep learning models are remarkably powerful, but they often make predictions with high confidence even when they’re wrong.
+Modern deep learning models are remarkably powerful but often make predictions with high confidence even when they are wrong.
 In safety-critical domains such as health, finance, or autonomous systems, this overconfidence makes it difficult to trust model outputs and impedes automatization.
-`torchbayesian` was created to make Bayesian Neural Networks (BNNs) and uncertainty quantification in PyTorch as simple as possible.
+The torchbayesian package was created to make Bayesian Neural Networks (BNN) and uncertainty quantification in PyTorch as simple as possible.
 The goal is to lower the barrier to practical Bayesian deep learning, enabling researchers and practitioners to integrate principled uncertainty estimation directly into their existing framework.
 
-## Citation
+## Contributing
 
-...
-
-## Contact
-
-...
+This library is still a work in progress. All contributions via pull requests are welcome.
