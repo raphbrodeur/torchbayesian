@@ -19,7 +19,7 @@ torchbayesian is a [PyTorch](https://pytorch.org/)-based, [open-source](https://
 It serves as a lightweight extension to PyTorch, providing support for Bayesian deep learning and principled uncertainty quantification of model predictions while preserving the standard PyTorch workflow.
 
 The package integrates seamlessly into the [PyTorch Ecosystem](https://pytorch.org/ecosystem/), enabling the conversion of existing models into Bayesian neural networks via [Bayes-by-Backprop](https://arxiv.org/abs/1505.05424) variational inference.
-Its modular design supports configurable priors and variational posteriors, and also includes support for other uncertainty estimation methods such as Monte Carlo dropout.
+Its modular design supports configurable priors and variational posteriors, and also includes support for other uncertainty estimation methods such as [Monte Carlo dropout](https://arxiv.org/abs/1506.02142).
 
 ### Quickly turn any PyTorch model into a Bayesian neural network
 
