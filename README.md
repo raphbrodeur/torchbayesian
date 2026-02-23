@@ -40,21 +40,14 @@ Internally, its parameters are reparameterized as variational distributions over
 
 ## Key Features
 
-- **Deterministic-to-Bayesian conversion** — ...
-- ... — ...
+- **Deterministic-to-Bayesian conversion** — Convert any existing model into a Bayesian neural network with a single line of code.
+- **Compatible with any `nn.Module`** — Rather than replacing a few specific layers (e.g., `nn.Linear`, `nn.ConvNd`) with Bayesian counterparts, torchbayesian operates at the `nn.Parameter` level.
+  Any trainable parameter, including those defined in custom or third-party modules, can be reparameterized as a variational distribution, ensuring the entire model is treated as Bayesian.
 - **Modular priors and posteriors** — Configure different priors and variational posteriors directly, or use custom implementations.
-- **Direct KL divergence access** — The Bayesian model's KL divergence is directly retrievable via `.kl_divergence()`, using analytic computation when available and Monte Carlo estimation otherwise.
-- **PyTorch-native design** — ...
-- ... — ...
+- **Direct KL divergence access** — Bayesian models expose their KL divergence via `.kl_divergence()`, using analytic computation when available and Monte Carlo estimation otherwise.
+- **PyTorch-native design** — Preserves existing workflows and is fully compatible with other PyTorch-based tools such as MONAI.
+- **Monte Carlo dropout support** — Includes dedicated layers and utilities for Monte Carlo dropout uncertainty estimation.
 
-## Key Features
-
-- **One line to "BNN-ize" any model** — Turn any already existing PyTorch model into a BNN with a single line of code. No need to rewrite your model, redefine layers, or modify your existing architecture.
-- **Truly compatible with all layers** — Unlike other "BNN-izers" that swap specific supported layers for variational versions (most often, only `nn.Linear` and `nn.ConvNd` layers are made variational), torchbayesian actually converts every trainable parameter in your model into a variational posterior `nn.Module`, actually making the entire model Bayesian, not just parts of it.
-- **PyTorch-native design** — Works entirely within PyTorch's framework; training, inference, evaluation remain unchanged. Fully compatible with other PyTorch-based tools such as [Lightning](https://lightning.ai/docs/pytorch/stable/), [TorchMetrics](https://lightning.ai/docs/torchmetrics/stable/), and [MONAI](https://monai.io/).
-- **Custom priors and variational posteriors** — Specify priors and variational posteriors directly as arguments. You can also define your own custom priors and variational posteriors and register them with the API using a simple decorator logic. This allows both plug-and-play use and deep customization without having to touch the core library.
-- **KL divergence easily accessible** — Retrieve the model's KL divergence at any point using the `.kl_divergence()` method of `bnn.BayesianModule`.
-- **Flexible KL computation** — When analytic computation is not available for some pair of variational posterior and prior, falls back to an estimation using Monte-Carlo sampling. This ensures generality and support for arbitrary user-defined distributions.
 
 ## Requirements
 
