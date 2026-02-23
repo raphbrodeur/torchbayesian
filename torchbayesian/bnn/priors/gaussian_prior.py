@@ -14,13 +14,10 @@ from typing import Optional
 import torch
 from torch import Tensor
 from torch.distributions import Distribution, Normal
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
 
 from torchbayesian.bnn.priors.base import Prior
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["GaussianPrior", "NormalPrior"]
@@ -42,7 +39,7 @@ class GaussianPrior(Prior):
         of the std matrix or a Tensor whose shape, dtype and device match the std matrix. Optional. Defaults to 1.
     dtype: Optional[_dtype]
         The supposed dtype of the parameter for which to initialize a Prior. Optional. Defaults to torch default dtype.
-    device: Optional[Device]
+    device: Device
         The supposed device of the parameter for which to initialize a Prior. Optional. Defaults to torch's default
         device.
 
@@ -64,7 +61,7 @@ class GaussianPrior(Prior):
             sigma: Optional[float | Tensor] = None,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None
+            device: Device = None
     ) -> None:
         """
         Initializes a diagonal Gaussian prior.
@@ -86,8 +83,8 @@ class GaussianPrior(Prior):
             'sigma' will be moved to 'dtype'/'device'. Optional. Defaults to a 1-filled tensor with shape 'shape'.
         dtype: Optional[_dtype]
             The dtype of the tensor for which to initialize the prior. Optional. Defaults to torch's default dtype.
-        device: Optional[Device]
-            The ddevice of the tensor for which to initialize the prior. Optional. Defaults to torch's default device.
+        device: Device
+            The device of the tensor for which to initialize the prior. Optional. Defaults to torch's default device.
 
         Raises
         ------
@@ -110,7 +107,7 @@ class GaussianPrior(Prior):
             sigma = 1.
 
         # Assign attribute 'mu'
-        if isinstance(mu, float):
+        if isinstance(mu, (int, float)):
             self.mu = torch.full(shape, mu, dtype=dtype, device=device)
         elif isinstance(mu, Tensor):
             # Align dtype/device if specified; otherwise ('dtype'/'device' is None) keep 'mu' 's dtype/device
@@ -119,7 +116,7 @@ class GaussianPrior(Prior):
             raise TypeError(f"Argument 'mu' must be Optional[float | Tensor], {type(mu)} was provided.")
 
         # Assign attribute 'sigma'
-        if isinstance(sigma, float):
+        if isinstance(sigma, (int, float)):
             self.sigma = torch.full(shape, sigma, dtype=dtype, device=device)
         elif isinstance(sigma, Tensor):
             # Align dtype/device if specified; otherwise ('dtype'/'device' is None) keep 'sigma' 's dtype/device

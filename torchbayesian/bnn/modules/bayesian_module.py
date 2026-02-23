@@ -25,7 +25,7 @@ import torch.distributions as D
 from torch.distributions import Distribution
 from torch.distributions.kl import _dispatch_kl
 from torch.nn import Module
-from torch.types import Device, _dtype
+from torch.types import Device
 
 from torchbayesian.bnn.utils import (
     get_posterior,
@@ -33,6 +33,7 @@ from torchbayesian.bnn.utils import (
     register_reparametrization
 )
 from torchbayesian.bnn.variational_posteriors import VariationalPosterior
+from torchbayesian.types import _dtype
 
 
 __all__ = ["BayesianModule"]
@@ -65,7 +66,7 @@ class BayesianModule(Module):
         order to track the device and dtype of the module's parameters through internal calls to '_apply' so that the KL
         accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default dtype.
         It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
-    device: Optional[Device]
+    device: Device
         The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized in
         order to track the device and dtype of the module's parameters through internal calls to _apply so that the KL
         accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch default device.
@@ -104,7 +105,7 @@ class BayesianModule(Module):
             prior: Optional[str | Tuple[str, Dict[str, Any]]] = None,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None,
+            device: Device = None,
             debug: bool = False
     ) -> None:
         """
@@ -133,7 +134,7 @@ class BayesianModule(Module):
             order to track the device and dtype of the module's parameters through internal calls to '_apply' so that
             the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch
             default dtype. It is recommended to use 'BayesianModule(...).to(device, dtype)' instead of this argument !
-        device: Optional[Device]
+        device: Device
             The device on which the KL divergence accumulator reference buffer is initialized. A buffer is initialized
             in order to track the device and dtype of the module's parameters through internal calls to _apply so that
             the KL accumulator's device and dtype fit that of the module's parameters. Optional. Defaults to torch

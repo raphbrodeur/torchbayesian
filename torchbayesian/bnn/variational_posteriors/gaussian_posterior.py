@@ -17,13 +17,10 @@ from torch import Tensor
 from torch.distributions import Normal
 from torch.nn import Parameter
 import torch.nn.functional as F
-from torch.types import (
-    Device,
-    _dtype,
-    _size
-)
+from torch.types import Device
 
 from torchbayesian.bnn.variational_posteriors.base import VariationalPosterior
+from torchbayesian.types import _dtype, _size
 
 
 __all__ = ["GaussianPosterior", "NormalPosterior"]
@@ -45,7 +42,7 @@ class GaussianPosterior(VariationalPosterior):
     dtype : Optional[_dtype]
         The dtype of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
         dtype.
-    device : Optional[Device]
+    device : Device
         The device of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
         device.
 
@@ -65,7 +62,7 @@ class GaussianPosterior(VariationalPosterior):
             shape: _size,
             *,
             dtype: Optional[_dtype] = None,
-            device: Optional[Device] = None
+            device: Device = None
     ) -> None:
         """
         Initializes a diagonal Gaussian variational posterior.
@@ -77,7 +74,7 @@ class GaussianPosterior(VariationalPosterior):
         dtype : Optional[_dtype]
             The dtype of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
             dtype.
-        device : Optional[Device]
+        device : Device
             The device of the parameter being replaced by the variational posterior. Optional. Defaults to torch default
             device.
         """
