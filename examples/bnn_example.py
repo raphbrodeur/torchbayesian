@@ -3,10 +3,14 @@
     @Author:            Raphael Brodeur
 
     @Creation Date:     10/2025
-    @Last modification: 10/2025
+    @Last modification: 02/2026
 
     @Description:       This file contains an example of how to use 'torchbayesian' to make, train and use a BNN version
                         of any torch model.
+
+                        It does not use 'torchbayesian' to do strict, proper stochastic variational inference, rather
+                        this file serves as a tutorial for users wanting to quickly implement pragmatic uncertainty
+                        quantification.
 """
 
 import matplotlib.pyplot as plt
@@ -68,7 +72,8 @@ if __name__ == '__main__':
 
     # By default, 'BayesianModule()' sets a Gaussian variational posterior and a Gaussian prior N(0, 1) for every
     # original parameter. One could also give some other variational posterior or prior as argument, e.g. :
-    #     model = bnn.BayesianModule(model, prior=("NORMAL", {"mu": 0., "sigma": 1.}))
+    #     model = BayesianModule(model, variational_posterior="pretrained", prior=("NORMAL", {"mu": 0., "sigma": 1.}))
+    #
     # If one wants to use variational posteriors and priors that are not implemented in the package, simply register a
     # factory function for said custom posterior or prior to the factories 'PosteriorFactory' or 'PriorFactory', as
     # detailed in the docs of 'Factory' in file 'torchbayesian.bnn.utils.factories'. This will let 'BayesianModule()'
@@ -111,12 +116,31 @@ if __name__ == '__main__':
 
             optimizer.zero_grad()
 
-            y_pred = model(x)           # Sample a prediction from the model
+            # Monte Carlo estimation of the expected NLL.
+            # Using more than one sample prediction and computing the average NLL reduces the variance of the gradient
+            # estimation.
+            #
+            #     num_mc_samples = 5
+            #     nll_accumulator = 0.
+            #     for _ in range(num_mc_samples):
+            #         y_pred = model(x)           # Sample a prediction from the model
+            #
+            #         nll_accumulator += mse(y, y_pred)
+            #     nll = nll_accumulator / num_mc_samples
+            #
+            #     loss = nll + model.kl_divergence()
+            #
+            # While more noisy, a single sample prediction is often sufficient:
+
+            y_pred = model(x)           # Sample a prediction from the model.
 
             # One can use an ELBO-like loss to follow VI more closely :
             #     loss = NLL(y, y_pred) + model.kl_divergence()
             # From a more pragmatic perspective, the KL divergence term can be thought of as a regularization term for
             # the BNN parameters.
+
+            # In practice, many users prefer simpler heuristic forms, which correspond to proper VI only under some
+            # assumptions.
 
             loss = mse(y, y_pred) + 1e-1 * model.kl_divergence(reduction="mean")    # Loss
 
