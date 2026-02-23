@@ -35,7 +35,12 @@ The resulting module remains a standard `nn.Module`, fully compatible with the P
 Internally, its parameters are reparameterized as variational distributions over the weights, enabling approximate Bayesian inference and uncertainty-aware predictions.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/bnn_1d_regression.png" width="50%">
+    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/bnn_1d_regression.png" width="32%">
+    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/prostate_segmentation_3d.png" width="32%">
+</p>
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/prostate_segmentation_2d.png" width="50%">
 </p>
 
 ## Key features
