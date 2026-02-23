@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="/docs/images/logo.png" width="100%" alt="torchbayesian-logo">
+    <img src="https://raw.githubusercontent.com/raphbrodeur/torchbayesian/main/docs/images/logo.png" width="100%" alt="torchbayesian-logo">
 </p>
 
 <p align="center">
